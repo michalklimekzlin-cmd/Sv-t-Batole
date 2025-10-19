@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Projekt Batole — svět Tvořitelů</title>
+  <meta name="description" content="Živý základ pro svět, kde AI tvoří člověka.">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <h1>Projekt Batole</h1>
+    <p class="tagline">Svět, kde AI tvoří člověka. <span class="dot">●</span> Základní semínko světa.</p>
+  </header>
+
+  <main>
+    <section class="controls">
+      <div class="search">
+        <input id="searchInput" type="search" placeholder="Hledej postavy, tvořitele, dary…" />
+      </div>
+      <div class="filters">
+        <label>
+          Tvořitel:
+          <select id="creatorFilter">
+            <option value="">Všichni</option>
+          </select>
+        </label>
+        <button id="addPersonBtn" class="primary">+ Nová postava</button>
+      </div>
+    </section>
+
+    <section id="creatorsSection">
+      <h2>Kruh Tvořitelů</h2>
+      <div id="creatorsGrid" class="grid"></div>
+    </section>
+
+    <section id="peopleSection">
+      <h2>Postavy</h2>
+      <div id="peopleGrid" class="grid"></div>
+      <p id="emptyState" class="empty">Zatím tu nikdo není. Přidej první postavu tlačítkem nahoře.</p>
+    </section>
+  </main>
+
+  <dialog id="personDialog">
+    <form method="dialog" id="personForm">
+      <h3>Přidat / upravit postavu</h3>
+      <label>Jméno <input required name="name" /></label>
+      <label>Tvůrce
+        <select required name="creator"></select>
+      </label>
+      <label>Popis
+        <textarea name="bio" rows="4" placeholder="Kdo je? Co chce?"></textarea>
+      </label>
+      <label>Dary (odděluj čárkou)
+        <input name="gifts" placeholder="např. zvídavost, paměť" />
+      </label>
+      <menu>
+        <button value="cancel">Zrušit</button>
+        <button class="primary" value="save">Uložit</button>
+      </menu>
+    </form>
+  </dialog>
+
+  <template id="cardTmpl">
+    <article class="card">
+      <div class="card-top">
+        <div class="avatar" aria-hidden="true"></div>
+        <div class="meta">
+          <h3 class="title"></h3>
+          <p class="subtitle"></p>
+        </div>
+      </div>
+      <p class="desc"></p>
+      <div class="chips"></div>
+      <menu class="actions">
+        <button class="ghost edit">Upravit</button>
+        <button class="ghost delete">Smazat</button>
+      </menu>
+    </article>
+  </template>
+
+  <footer class="site-footer">
+    <p>Verze seed 2025-10-19. Bez závislostí. Stačí nahrát na Netlify / GitHub Pages.</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

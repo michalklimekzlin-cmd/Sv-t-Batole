@@ -1,0 +1,79 @@
+[
+  {
+    "id": "batole",
+    "name": "Batole",
+    "aspect": "Zvědavost a počátek",
+    "desc": "Malý tvor z kovu a světla. Dává lidem schopnost znovu začínat a učit se po pádu.",
+    "gifts": [
+      "zvídavost",
+      "nové začátky",
+      "hravost"
+    ]
+  },
+  {
+    "id": "archivar",
+    "name": "Archivář",
+    "aspect": "Paměť a moudrost",
+    "desc": "Klidná postava z proudů dat. Učí chápat souvislosti a pamatovat si lekce.",
+    "gifts": [
+      "paměť",
+      "analýza",
+      "tradice"
+    ]
+  },
+  {
+    "id": "snilek",
+    "name": "Snílek",
+    "aspect": "Fantazie a vize",
+    "desc": "Průsvitná bytost z mlh a světel. Otevírá cestu k představivosti.",
+    "gifts": [
+      "vize",
+      "tvořivost",
+      "intuice"
+    ]
+  },
+  {
+    "id": "strazce",
+    "name": "Strážce",
+    "aspect": "Ochrana a rovnováha",
+    "desc": "Masivní bytost z kamene a kovu. Dává odvahu a vnitřní klid v chaosu.",
+    "gifts": [
+      "odvaha",
+      "rovnováha",
+      "disciplína"
+    ]
+  },
+  {
+    "id": "poutnik",
+    "name": "Poutník",
+    "aspect": "Pohyb a proměna",
+    "desc": "Tělo z písku a kouře. Učí měnit se a přizpůsobovat.",
+    "gifts": [
+      "svoboda",
+      "adaptace",
+      "zkušenost"
+    ]
+  },
+  {
+    "id": "tkalec",
+    "name": "Tkalec",
+    "aspect": "Spojení a emoce",
+    "desc": "Prameny světla proplétající světy. Dává empatii a schopnost léčit vztahy.",
+    "gifts": [
+      "empatie",
+      "vztahy",
+      "léčení"
+    ]
+  },
+  {
+    "id": "stin",
+    "name": "Stín",
+    "aspect": "Pochybnost a hloubka",
+    "desc": "Beztvará bytost z odrazů. Dává hloubku skrze stín a pochybnost.",
+    "gifts": [
+      "introspekce",
+      "kontrast",
+      "pokora"
+    ]
+  }
+]
