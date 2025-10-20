@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>BatoleSvět — v0.3 (voice)</title>
+  <title>BatoleSvět — v0.3 (voice & bros)</title>
   <link rel="stylesheet" href="style.css" />
   <meta name="theme-color" content="#0b0b0c" />
 </head>
@@ -19,6 +19,7 @@
       <span class="voicebar">
         <button id="voiceToggle" class="chip">🎧 Hlas: off</button>
         <button id="micToggle" class="chip">🎤 Mikrofon: off</button>
+        <button id="settingsBtn" class="chip">⚙️ Parťák</button>
       </span>
     </nav>
   </header>
@@ -53,7 +54,7 @@
     <span>© Kovošrot &amp; Batole</span>
   </footer>
 
-  <!-- Intro overlay -->
+  <!-- Intro -->
   <div id="intro" class="overlay show">
     <div class="overlay-card">
       <h1>Svět se hýbe jen impulsem.</h1>
@@ -62,25 +63,48 @@
     </div>
   </div>
 
-  <!-- Name overlay -->
+  <!-- Pojmenuj parťáka + vyber osobnost -->
   <div id="nameAsk" class="overlay">
     <div class="overlay-card">
       <h2>Pojmenuj svého parťáka</h2>
-      <p class="muted">Napiš vlastní jméno, nebo ťukni na návrh.</p>
+      <p class="muted">Napiš vlastní jméno, nebo ťukni na návrh a vyber styl mluvy.</p>
       <input id="nameInput" class="text" type="text" maxlength="20" placeholder="Např. Orbit" />
       <div class="row" style="margin-top:8px">
         <button class="chip nameChoice" data-name="Orbit">Orbit</button>
         <button class="chip nameChoice" data-name="Míza">Míza</button>
         <button class="chip nameChoice" data-name="Iskra">Iskra</button>
       </div>
+      <div class="row" style="margin-top:12px">
+        <button class="chip personaChoice" data-persona="orbit">🌀 Orbit (vědec)</button>
+        <button class="chip personaChoice" data-persona="miza">🌱 Míza (empatická)</button>
+        <button class="chip personaChoice" data-persona="iskra">⚡ Iskra (vtipálek)</button>
+      </div>
       <div class="row" style="margin-top:8px">
-        <button id="nameConfirm" class="btn wide">Potvrdit jméno</button>
+        <button id="nameConfirm" class="btn wide">Pokračovat</button>
       </div>
     </div>
   </div>
 
-  <!-- Tutorial bubbles -->
-  <div id="tip1" class="tip">Zkus <strong>Šepot</strong>. (stojí 1 energii)</div>
+  <!-- Nastavení parťáka -->
+  <div id="settings" class="overlay">
+    <div class="overlay-card">
+      <h2>Parťák — nastavení</h2>
+      <div class="row" style="margin-bottom:8px">
+        <button class="chip personaChoice" data-persona="orbit">🌀 Orbit</button>
+        <button class="chip personaChoice" data-persona="miza">🌱 Míza</button>
+        <button class="chip personaChoice" data-persona="iskra">⚡ Iskra</button>
+      </div>
+      <div class="row" style="margin-bottom:8px">
+        <button id="toneToggle" class="chip">🗣️ Tón: Auto</button>
+      </div>
+      <div class="row">
+        <button id="settingsClose" class="btn wide">Zavřít</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tutorial bubliny -->
+  <div id="tip1" class="tip">Zkus <strong>Šepot</strong> (stojí 1 energii).</div>
   <div id="tip2" class="tip">Teď klikni na <strong>AI odpověď</strong>.</div>
 
   <!-- Mission complete -->
@@ -92,7 +116,7 @@
     </div>
   </div>
 
-  <!-- Chat Companion -->
+  <!-- Chat -->
   <div id="chat" class="chat">
     <div id="chatLog" class="chat-log" aria-live="polite"></div>
     <div id="chatChoices" class="chat-choices"></div>
