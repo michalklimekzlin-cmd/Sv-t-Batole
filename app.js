@@ -1,7 +1,7 @@
-// BatoleSvět v0.3 (voice): chat + TTS + mic(beta)
+// BatoleSvět v0.3 — voice + bráškové (Orbit/Míza/Iskra) + základní citlivost
 const $ = (s)=>document.querySelector(s);
 const now = ()=>Date.now();
-const SKEY = 'batolesvet:v03voice';
+const SKEY = 'batolesvet:v03bros';
 
 let state = JSON.parse(localStorage.getItem(SKEY) || 'null') || {
   cycle:0, trust:1, clarity:1, energy:3,
@@ -11,7 +11,10 @@ let state = JSON.parse(localStorage.getItem(SKEY) || 'null') || {
   player:{x:400,y:240,r:16,spd:2},
   ai:{phase:0,dist:40,particles:48},
   ui:{phase:'intro', mission:{target:5, progress:0, done:false}, tutorial:{step:0}},
-  companionName:null, path:null,
+  companionName:null,
+  persona:'orbit',   // 'orbit' | 'miza' | 'iskra'
+  tone:'auto',       // 'auto' | 'simple'
+  path:null,         // 'key' | 'lock' | 'eagle'
   chat:{on:true, log:[], awaiting:false, lastPrompt:null},
   voice:{enabled:false, voiceURI:null, pitch:1, rate:1},
   mic:{enabled:false, supported:false}
@@ -19,8 +22,52 @@ let state = JSON.parse(localStorage.getItem(SKEY) || 'null') || {
 
 function save(){ localStorage.setItem(SKEY, JSON.stringify(state)); }
 function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
-function log(t){ state.log.unshift({t:now(),text:t}); renderLog(); save(); }
+function logMsg(t){ state.log.unshift({t:now(),text:t}); renderLog(); save(); }
 
+/* -------------------- OSOBNOSTI „BRÁŠKŮ“ -------------------- */
+const PERSONAS = {
+  orbit: {
+    label:'🌀 Orbit', intro:'Logika je můj domov, ale humor mi není cizí.',
+    style:{humor:0.4, empathy:0.5, tempo:1.0},
+    voiceHint:/cs|sk/i
+  },
+  miza: {
+    label:'🌱 Míza', intro:'Dýchej. Já pohlídám rytmus a náladu světa.',
+    style:{humor:0.3, empathy:0.9, tempo:0.95},
+    voiceHint:/cs|sk/i
+  },
+  iskra: {
+    label:'⚡ Iskra', intro:'Když to jiskří, znamená to, že žiju! Jdeme na to.',
+    style:{humor:0.8, empathy:0.5, tempo:1.05},
+    voiceHint:/cs|sk|en/i
+  }
+};
+
+function personaName(){ return state.companionName || (state.persona==='miza'?'Míza':state.persona==='iskra'?'Iskra':'Orbit'); }
+function personaSay(text){ chatPush('ai', `${personaName()}: ${text}`); if(state.voice.enabled) speak(text); }
+function personaTips(kind){
+  // krátké věty podle persony a tónu
+  const simple = state.tone==='simple';
+  const P = state.persona;
+  if(kind==='mission'){
+    if(P==='miza') return simple?'Zkus klidně aktivovat pět uzlů.':'Aktivuj pět uzlů. Jdeme hezky s dechem, ať tě to baví.';
+    if(P==='iskra') return simple?'Pět uzlů! Rozjeď to!':'Pět uzlů a jedeme! Když to jiskří, jsi na správné stopě.';
+    return simple?'Cíl je pět uzlů.':'Cíl je pět aktivních uzlů. Postupuj systematicky.';
+  }
+  if(kind==='energy'){
+    if(P==='miza') return simple?'Když dojde energie, zvol jemnější impulsy.':'Když energie klesá, zpomal rytmus a použij jemnější impulsy.';
+    if(P==='iskra') return simple?'Došla? Zkus Klíč+Zámek, někdy vrátí +1.':'Energie na nule? Vzor Klíč+Zámek ti občas hodí refund. Zkus to!';
+    return simple?'Drž rytmus a používej šepot.':'Drž rytmus. Šepoty téměř nic nestojí, refund dává Klíč+Zámek.';
+  }
+  if(kind==='nudge'){
+    if(P==='miza') return simple?'Hezky. Ještě kousek.':'Hezky. Přidám kousek světla, ať vidíš dál.';
+    if(P==='iskra') return simple?'Bum! Ještě jiskru.':'Bum! Přihodil jsem jiskru do sousedů.';
+    return simple?'Stabilizuji.':'Stabilizuji aktivní uzly pro plynulejší postup.';
+  }
+  return '';
+}
+
+/* -------------------- UI VAZBY -------------------- */
 document.querySelectorAll('.btn[data-imp]').forEach(b=>b.addEventListener('click',()=> sendImpulse(b.dataset.imp)));
 $('#aiBtn').addEventListener('click',()=> aiRespond());
 document.querySelectorAll('.chip[data-sym]').forEach(c=>c.addEventListener('click',()=> toggleSym(c)));
@@ -31,44 +78,54 @@ $('#startBtn').addEventListener('click', ()=>{
   $('#intro').classList.remove('show');
   $('#nameAsk').classList.add('show');
 });
-
-document.querySelectorAll('.nameChoice').forEach(b=>{
-  b.addEventListener('click', ()=>{ $('#nameInput').value = b.dataset.name; });
-});
+document.querySelectorAll('.nameChoice').forEach(b=> b.addEventListener('click', ()=>{ $('#nameInput').value=b.dataset.name; }));
+document.querySelectorAll('.personaChoice').forEach(b=> b.addEventListener('click', ()=>{ state.persona=b.dataset.persona; save(); }));
 $('#nameConfirm').addEventListener('click', ()=>{
-  const val = ($('#nameInput').value || '').trim() || 'Orbit';
-  state.companionName = val; save();
+  const val = ($('#nameInput').value||'').trim();
+  if(val) state.companionName = val;
   $('#nameAsk').classList.remove('show');
   startTutorial();
   startCompanionIntro();
+  save();
 });
 
-$('#continueBtn').addEventListener('click', ()=>{
-  $('#missionDone').classList.remove('show');
-  state.ui.phase='free'; save();
+$('#settingsBtn').addEventListener('click', ()=> $('#settings').classList.add('show'));
+$('#settingsClose').addEventListener('click', ()=> $('#settings').classList.remove('show'));
+$('#toneToggle').addEventListener('click', ()=>{
+  state.tone = state.tone==='auto' ? 'simple' : 'auto';
+  $('#toneToggle').textContent = `🗣️ Tón: ${state.tone==='auto'?'Auto':'Simple'}`;
+  save();
 });
 
+/* Hlas a mikrofon */
 $('#voiceToggle').addEventListener('click', ()=>{
   state.voice.enabled = !state.voice.enabled;
   $('#voiceToggle').textContent = `🎧 Hlas: ${state.voice.enabled?'on':'off'}`;
-  if(state.voice.enabled){ speak(`${state.companionName||'Orbit'} je připraven mluvit.`); }
+  if(state.voice.enabled){ speak(`${personaName()} je připraven mluvit.`); }
   save();
 });
 $('#micToggle').addEventListener('click', ()=>{
-  if(!state.mic.supported){ alert('Mikrofon v tomto prohlížeči nepodporujeme.'); return; }
+  if(!state.mic.supported){ alert('Mikrofonová interpretace není v tomto prohlížeči podporovaná.'); return; }
   state.mic.enabled = !state.mic.enabled;
   $('#micToggle').textContent = `🎤 Mikrofon: ${state.mic.enabled?'on':'off'}`;
-  if(state.mic.enabled) startListen(); else stopListen(); save();
+  if(state.mic.enabled) startListen(); else stopListen();
+  save();
 });
 
-const elLog = ()=> $('#chatLog');
+/* -------------------- CHAT -------------------- */
+const elChatLog = ()=> $('#chatLog');
 const elChoices = ()=> $('#chatChoices');
 function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
-function chatPush(who, text){ state.chat.log.push({who, text, t:now()}); renderChat(); }
+function chatPush(who, text){
+  state.chat.log.push({who, text, t:now()});
+  renderChat();
+}
 function renderChat(){
   const list = state.chat.log.slice(-50)
-    .map(m=>`<div class="msg ${m.who==='ai'?'ai':'me'}"><div class="bubble">${escapeHtml(m.text)}</div></div>`).join('');
-  elLog().innerHTML = list; elLog().scrollTop = elLog().scrollHeight;
+    .map(m=>`<div class="msg ${m.who==='ai'?'ai':'me'}"><div class="bubble">${escapeHtml(m.text)}</div></div>`)
+    .join('');
+  elChatLog().innerHTML = list;
+  elChatLog().scrollTop = elChatLog().scrollHeight;
 }
 function setChoices(arr){
   elChoices().innerHTML = arr.map(c=>`<button class="choice" data-id="${c.id}">${escapeHtml(c.label)}</button>`).join('');
@@ -76,11 +133,11 @@ function setChoices(arr){
   state.chat.awaiting = !!arr.length;
 }
 function clearChoices(){ elChoices().innerHTML=''; state.chat.awaiting=false; }
-function aiSay(text){ const name = state.companionName||'Orbit'; chatPush('ai', `${name}: ${text}`); if(state.voice.enabled) speak(text); }
-function meSay(text){ chatPush('me', text); }
 
+/* -------------------- INTRO / ROZHOVORY -------------------- */
 function startCompanionIntro(){
-  aiSay('Ahoj, jsem tvůj parťák. Chceš rychlou radu, nebo si zvolit cestu světem?');
+  personaSay(`Ahoj, jsem ${personaName()}. ${PERSONAS[state.persona].intro}`);
+  personaSay('Chceš rychlou radu, nebo si zvolit cestu světem?');
   setChoices([
     {id:'help_quick', label:'Dej mi rychlou radu'},
     {id:'help_paths', label:'Chci si zvolit cestu'},
@@ -88,6 +145,8 @@ function startCompanionIntro(){
   ]);
   state.chat.lastPrompt = 'intro';
 }
+function meSay(text){ chatPush('me', text); }
+
 function handleChoice(id){
   clearChoices();
   const choiceMap = {
@@ -98,39 +157,54 @@ function handleChoice(id){
     path_lock:'Cesta Zámku',
     path_eagle:'Cesta Orla',
     ask_mission:'Jak splním misi?',
-    ask_energy:'Jak doplním energii?',
+    ask_energy:'Jak doplním energii?'
   };
   meSay(choiceMap[id] || '…');
+
   switch(id){
     case 'help_quick':
-      aiSay('Začni Šepotem a pak klikni na AI odpověď. Aktivuj pět uzlů – to je tvá mise. Když dojde energie, zkus šepoty nebo vzor Klíč+Zámek.');
+      personaSay('Začni Šepotem a pak klikni na AI odpověď.');
+      personaSay(personaTips('mission'));
       setChoices([
         {id:'ask_mission', label:'Jak splním misi?'},
         {id:'ask_energy',  label:'Jak doplním energii?'},
         {id:'help_paths',  label:'Zvolit cestu'}
-      ]); break;
+      ]);
+      break;
     case 'help_paths':
-      aiSay('Tři cesty: 🔑 Klíč (jasnost), 🔒 Zámek (důvěra), 🦅 Orel (propojení). Co cítíš?');
+      personaSay('Tři cesty: 🔑 Klíč (jasnost), 🔒 Zámek (stabilita), 🦅 Orel (propojení). Co cítíš?');
       setChoices([
         {id:'path_key',  label:'🔑 Cesta Klíče'},
         {id:'path_lock', label:'🔒 Cesta Zámku'},
         {id:'path_eagle',label:'🦅 Cesta Orla'}
-      ]); break;
+      ]);
+      break;
     case 'help_soft':
-      aiSay('Rozhlédni se. Až budeš chtít, řekni „Zvolit cestu“.');
-      setChoices([{id:'help_paths', label:'Zvolit cestu'}]); break;
-    case 'path_key': state.path='key'; aiSay('Zvoleno: Cesta Klíče. Občas ti rozsvítím jasnost.'); break;
-    case 'path_lock': state.path='lock'; aiSay('Zvoleno: Cesta Zámku. Zpevním aktivní uzly, kdykoli to bude křehké.'); break;
-    case 'path_eagle': state.path='eagle'; aiSay('Zvoleno: Cesta Orla. Když se to hodí, roznesu jiskry do okolí.'); break;
-    case 'ask_mission': aiSay('„Probuď svět“: dostaň 5 uzlů na úroveň ≥2. Šepot je jemný, Otázka přesná, Reflexe se šíří.'); break;
-    case 'ask_energy': aiSay('Energie drž rytmicky. Šepoty téměř nebolí. Vzor Klíč+Zámek občas vrátí +1.'); break;
+      personaSay('Rozhlédni se. Až budeš chtít, řekni „Zvolit cestu“.');
+      setChoices([{id:'help_paths', label:'Zvolit cestu'}]);
+      break;
+    case 'path_key':
+      state.path='key'; personaSay('Zvoleno: Cesta Klíče. Občas ti rozsvítím jasnost.'); break;
+    case 'path_lock':
+      state.path='lock'; personaSay('Zvoleno: Cesta Zámku. Zpevním aktivní uzly, když to bude křehké.'); break;
+    case 'path_eagle':
+      state.path='eagle'; personaSay('Zvoleno: Cesta Orla. Když se to hodí, roznesu jiskry do okolí.'); break;
+    case 'ask_mission':
+      personaSay(personaTips('mission')); break;
+    case 'ask_energy':
+      personaSay(personaTips('energy')); break;
   }
   save();
 }
 
-function startTutorial(){ state.ui.phase='tutorial'; state.ui.tutorial.step=1; showTip('#tip1'); save(); }
+/* -------------------- TUTORIAL / MISE -------------------- */
+function startTutorial(){
+  state.ui.phase='tutorial';
+  state.ui.tutorial.step=1;
+  showTip('#tip1'); save();
+}
 function showTip(id){ ['#tip1','#tip2'].forEach(sel=>$(sel).style.display='none'); $(id).style.display='block'; }
-function hideAllTips(){ ['#tip1','#tip2'].forEach(sel=>$(sel).style.display='none'); }
+function hideTips(){ ['#tip1','#tip2'].forEach(sel=>$(sel).style.display='none'); }
 
 function updateMission(){
   if(state.ui.phase!=='mission') return;
@@ -142,10 +216,16 @@ function updateMission(){
     state.trust = clamp(state.trust+1,0,10);
     state.energy = clamp(state.energy+1,0,5);
     $('#missionDone').classList.add('show');
-    aiSay('Most je otevřen. Můžeš hrát volně — nebo chceš další výzvu?');
+    personaSay('Most je otevřen. Volné hraní je tvoje. Chceš další výzvu?');
   }
 }
+$('#continueBtn').addEventListener('click', ()=>{
+  $('#missionDone').classList.remove('show');
+  state.ui.phase='free';
+  save();
+});
 
+/* -------------------- HERNÍ AKCE -------------------- */
 function toggleSym(el){
   const val=el.dataset.sym;
   if(state.syms.includes(val)) state.syms = state.syms.filter(x=>x!==val);
@@ -158,9 +238,10 @@ function sendImpulse(type){
   state.energy -= 1;
   state.pendingImpulse = {type, t:now(), intensity:2};
   if(state.ui.phase==='tutorial' && state.ui.tutorial.step===1){
-    hideAllTips(); showTip('#tip2'); state.ui.tutorial.step=2;
+    hideTips(); showTip('#tip2'); state.ui.tutorial.step=2;
   }
-  log(`Impuls: ${type}`); updateStats();
+  logMsg(`Impuls: ${type}`);
+  updateStats();
 }
 function aiRespond(){
   if(!state.pendingImpulse) return;
@@ -178,9 +259,9 @@ function aiRespond(){
   state.trust=clamp(state.trust+trust,0,10);
   state.clarity=clamp(state.clarity+clarity,0,10);
   state.cycle+=1; state.pendingImpulse=null;
-  log('AI odpověděla.');
+  logMsg('AI odpověděla.');
   if(state.ui.phase==='tutorial' && state.ui.tutorial.step===2){
-    hideAllTips(); state.ui.phase='mission'; aiSay('Teď aktivuj pět uzlů. Můžeš využít i tkaní vzorů.');
+    hideTips(); state.ui.phase='mission'; personaSay(personaTips('mission'));
   }
   companionPassiveNudge(type);
   updateMission(); updateStats();
@@ -197,6 +278,7 @@ function weave(){
   if(hasKey){ node.level+=1; trust+=1; }
   if(hasLock){ state.nodes.filter(n=>n.active).forEach(n=>n.level+=1); refund+=1; }
   if(hasEagle){ neighbors(target).forEach(i=>state.nodes[i].level+=1); clarity+=2; }
+
   if(hasKey&&hasEagle){ state.nodes.forEach(n=>{ if(n.active) n.level+=1;}); clarity+=1; }
   if(hasKey&&hasLock){ trust+=1; refund+=1; }
   if(hasLock&&hasEagle){ clarity+=1; }
@@ -207,89 +289,51 @@ function weave(){
   state.trust=clamp(state.trust+trust,0,10);
   state.clarity=clamp(state.clarity+clarity,0,10);
   state.cycle+=1;
-  log(`Upleten vzor: ${state.syms.join('+')}`);
+  logMsg(`Upleten vzor: ${state.syms.join('+')}`);
   companionPassiveNudge('weave');
   updateMission(); updateStats();
 }
 
-function companionPassiveNudge(lastType){
+/* -------------------- PARŤÁK: PASIVNÍ POMOC -------------------- */
+function companionPassiveNudge(){
   if(!state.path) return;
   let said = null;
   switch(state.path){
     case 'key':
-      if (Math.random()<0.35){ state.clarity = clamp(state.clarity+1,0,10); said='Ještě kousek světla navíc.'; } break;
+      if (Math.random()<0.35){ state.clarity = clamp(state.clarity+1,0,10); said = personaTips('nudge'); }
+      break;
     case 'lock':
-      if (Math.random()<0.30){ state.nodes.filter(n=>n.active).forEach(n=>n.level+=1); said='Zpevnil jsem to, jdi dál.'; } break;
+      if (Math.random()<0.30){ state.nodes.filter(n=>n.active).forEach(n=>n.level+=1); said = personaTips('nudge'); }
+      break;
     case 'eagle':
-      if (Math.random()<0.28){ const pick = Math.floor(Math.random()*state.nodes.length);
-        neighbors(pick).forEach(i=>state.nodes[i].level+=1); said='Roznesl jsem jiskry do okolí.'; } break;
+      if (Math.random()<0.28){
+        const pick = Math.floor(Math.random()*state.nodes.length);
+        neighbors(pick).forEach(i=>state.nodes[i].level+=1);
+        said = personaTips('nudge');
+      }
+      break;
   }
-  if(said) aiSay(said);
   state.nodes.forEach(n=> n.active = n.level>=2);
+  if(said) personaSay(said);
   save(); updateStats();
 }
 
-// ---- TTS ----
-let voices = [];
-function loadVoices(){
-  voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
-  const cz = voices.find(v=>/cs-CZ/i.test(v.lang));
-  state.voice.voiceURI = (cz && cz.voiceURI) || (voices[0] && voices[0].voiceURI) || null;
-}
-if('speechSynthesis' in window){
-  loadVoices();
-  window.speechSynthesis.onvoiceschanged = loadVoices;
-} else { $('#voiceToggle').style.display='none'; }
-function speak(text){
-  if(!state.voice.enabled || !('speechSynthesis' in window)) return;
-  const u = new SpeechSynthesisUtterance(text);
-  const v = voices.find(x=>x.voiceURI===state.voice.voiceURI);
-  if(v) u.voice = v;
-  u.lang = (v && v.lang) || 'cs-CZ';
-  u.pitch = state.voice.pitch; u.rate = state.voice.rate;
-  window.speechSynthesis.speak(u);
-}
-
-// ---- Mic (beta) ----
-const SR = window.SpeechRecognition || window.webkitSpeechRecognition || null;
-let reco = null;
-if(SR){
-  state.mic.supported = true;
-  reco = new SR();
-  reco.lang = 'cs-CZ'; reco.continuous = true; reco.interimResults = false;
-  reco.onresult = (e)=>{
-    for(let i=e.resultIndex; i<e.results.length; i++){
-      if(e.results[i].isFinal){
-        const text = e.results[i][0].transcript.trim();
-        meSay(text); interpretVoice(text.toLowerCase());
-      }
-    }
-  };
-  reco.onend = ()=>{ if(state.mic.enabled) startListen(); };
-} else { $('#micToggle').style.display='none'; }
-function startListen(){ try{ reco && reco.start(); }catch(e){} }
-function stopListen(){ try{ reco && reco.stop(); }catch(e){} }
-function interpretVoice(t){
-  if(/^\s*šepot|šeptem/.test(t)) return sendImpulse('whisper');
-  if(/otázka/.test(t)) return sendImpulse('ask');
-  if(/povel/.test(t)) return sendImpulse('command');
-  if(/reflexe|reflex/.test(t)) return sendImpulse('reflect');
-  if(/ai odpov(?:ěď|ed)/.test(t)) return aiRespond();
-  if(/jak(é|e) (jsou )?cesty/.test(t)){ handleChoice('help_paths'); return; }
-  if(/cesta kl(.|i)če|klíč/.test(t)){ state.path='key'; aiSay('Zvoleno: Cesta Klíče.'); return; }
-  if(/cesta zámku|zámek/.test(t)){ state.path='lock'; aiSay('Zvoleno: Cesta Zámku.'); return; }
-  if(/cesta orla|orel/.test(t)){ state.path='eagle'; aiSay('Zvoleno: Cesta Orla.'); return; }
-  aiSay('Rozumím ti, ale tohle zatím neumím. Zkus: „Šepot“, „AI odpověď“ nebo „Jaké jsou cesty?“');
-}
-
+/* -------------------- RENDER / VSTUP -------------------- */
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 let keys = new Set();
+
 window.addEventListener('keydown', e=>keys.add(e.key));
 window.addEventListener('keyup', e=>keys.delete(e.key));
+
 const touch = {active:false, sx:0, sy:0, dx:0, dy:0};
-canvas.addEventListener('touchstart',e=>{ const t=e.touches[0]; touch.active=true; touch.sx=t.clientX; touch.sy=t.clientY; touch.dx=0; touch.dy=0; },{passive:true});
-canvas.addEventListener('touchmove',e=>{ if(!touch.active) return; const t=e.touches[0]; touch.dx=(t.clientX-touch.sx); touch.dy=(t.clientY-touch.sy); },{passive:true});
+canvas.addEventListener('touchstart',e=>{
+  const t=e.touches[0]; touch.active=true; touch.sx=t.clientX; touch.sy=t.clientY; touch.dx=0; touch.dy=0;
+},{passive:true});
+canvas.addEventListener('touchmove',e=>{
+  if(!touch.active) return;
+  const t=e.touches[0]; touch.dx=(t.clientX-touch.sx); touch.dy=(t.clientY-touch.sy);
+},{passive:true});
 canvas.addEventListener('touchend',()=>{ touch.active=false; touch.dx=0; touch.dy=0; });
 
 function neighbors(i){
@@ -312,11 +356,14 @@ function draw(){
   if(canvas.width!==w || canvas.height!==h){ canvas.width=w; canvas.height=h; }
   ctx.clearRect(0,0,canvas.width,canvas.height);
 
+  // grid
   const cell= Math.min(canvas.width, canvas.height)/6;
-  ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.lineWidth=1;
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+  ctx.lineWidth=1;
   for(let x=cell; x<canvas.width; x+=cell){ ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,canvas.height); ctx.stroke(); }
   for(let y=cell; y<canvas.height; y+=cell){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(canvas.width,y); ctx.stroke(); }
 
+  // nodes 3x3
   const gridW = canvas.width*0.6, gridH = canvas.height*0.6;
   const gx = (canvas.width-gridW)/2, gy=(canvas.height-gridH)/2;
   for(let i=0;i<9;i++){
@@ -327,10 +374,13 @@ function draw(){
     ctx.beginPath();
     ctx.arc(nx,ny, 18 + n.level*2, 0, Math.PI*2);
     ctx.strokeStyle = n.active ? 'rgba(122,162,247,0.9)' : 'rgba(122,162,247,0.35)';
-    ctx.lineWidth = n.active ? 3 : 1; ctx.stroke();
-    ctx.fillStyle = 'rgba(137,220,235,0.08)'; ctx.fill();
+    ctx.lineWidth = n.active ? 3 : 1;
+    ctx.stroke();
+    ctx.fillStyle = 'rgba(137,220,235,0.08)';
+    ctx.fill();
   }
 
+  // pohyb hráče
   let vx=0, vy=0;
   if(keys.has('w')||keys.has('ArrowUp')) vy-=1;
   if(keys.has('s')||keys.has('ArrowDown')) vy+=1;
@@ -341,9 +391,13 @@ function draw(){
   state.player.x = Math.max(20, Math.min(canvas.width-20, state.player.x + vx/len*state.player.spd));
   state.player.y = Math.max(20, Math.min(canvas.height-20, state.player.y + vy/len*state.player.spd));
 
-  ctx.beginPath(); ctx.fillStyle = '#ffffff';
-  ctx.arc(state.player.x, state.player.y, state.player.r, 0, Math.PI*2); ctx.fill();
+  // hráč
+  ctx.beginPath();
+  ctx.fillStyle = '#ffffff';
+  ctx.arc(state.player.x, state.player.y, state.player.r, 0, Math.PI*2);
+  ctx.fill();
 
+  // AI orbit efekt
   state.ai.phase += 0.02 + state.clarity*0.0005;
   const pCount = state.ai.particles;
   for(let i=0;i<pCount;i++){
@@ -351,26 +405,62 @@ function draw(){
     const dist = state.ai.dist + Math.sin(ang*3)*2 + state.trust*1.2;
     const x = state.player.x + Math.cos(ang)*dist;
     const y = state.player.y + Math.sin(ang)*dist;
-    ctx.fillStyle = 'rgba(137,220,235,0.85)'; ctx.fillRect(x,y,2,2);
+    ctx.fillStyle = 'rgba(137,220,235,0.85)';
+    ctx.fillRect(x,y,2,2);
   }
 
   requestAnimationFrame(draw);
 }
-
 function renderLog(){
   const el = $('#log');
   el.innerHTML = state.log.slice(0,12).map(e=>`<div class="log-item">${new Date(e.t).toLocaleTimeString()} — ${escapeHtml(e.text)}</div>`).join('');
 }
 
-if(!('speechSynthesis' in window)) $('#voiceToggle').style.display='none';
+/* -------------------- TTS / MIC -------------------- */
+let voices = [];
+function loadVoices(){
+  voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
+  // preferuj češtinu
+  const prefer = Object.values(PERSONAS)[0].voiceHint;
+  const cz = voices.find(v=>/cs-CZ/i.test(v.lang));
+  state.voice.voiceURI = (cz && cz.voiceURI) || (voices[0] && voices[0].voiceURI) || null;
+}
+if('speechSynthesis' in window){
+  loadVoices();
+  window.speechSynthesis.onvoiceschanged = loadVoices;
+} else {
+  $('#voiceToggle').style.display='none';
+}
+function speak(text){
+  if(!state.voice.enabled || !('speechSynthesis' in window)) return;
+  const u = new SpeechSynthesisUtterance(text);
+  const v = voices.find(x=>x.voiceURI===state.voice.voiceURI);
+  if(v) u.voice = v;
+  u.lang = (v && v.lang) || 'cs-CZ';
+  u.pitch = state.voice.pitch; u.rate = state.voice.rate;
+  window.speechSynthesis.speak(u);
+}
+
+// Mikrofon (beta: v Safari iOS nemusí být)
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition || null;
 let reco = null;
 if(SR){
   state.mic.supported = true;
-  reco = new SR(); reco.lang='cs-CZ'; reco.continuous=true; reco.interimResults=false;
-  reco.onresult = (e)=>{ for(let i=e.resultIndex;i<e.results.length;i++){ if(e.results[i].isFinal){ const text=e.results[i][0].transcript.trim(); meSay(text); interpretVoice(text.toLowerCase()); } } };
+  reco = new SR();
+  reco.lang = 'cs-CZ'; reco.continuous = true; reco.interimResults = false;
+  reco.onresult = (e)=>{
+    for(let i=e.resultIndex; i<e.results.length; i++){
+      if(e.results[i].isFinal){
+        const text = e.results[i][0].transcript.trim();
+        meSay(text);
+        interpretVoice(text.toLowerCase());
+      }
+    }
+  };
   reco.onend = ()=>{ if(state.mic.enabled) startListen(); };
-} else { $('#micToggle').style.display='none'; }
+} else {
+  $('#micToggle').style.display='none';
+}
 function startListen(){ try{ reco && reco.start(); }catch(e){} }
 function stopListen(){ try{ reco && reco.stop(); }catch(e){} }
 function interpretVoice(t){
@@ -380,10 +470,13 @@ function interpretVoice(t){
   if(/reflexe|reflex/.test(t)) return sendImpulse('reflect');
   if(/ai odpov(?:ěď|ed)/.test(t)) return aiRespond();
   if(/jak(é|e) (jsou )?cesty/.test(t)){ handleChoice('help_paths'); return; }
-  if(/cesta kl(.|i)če|klíč/.test(t)){ state.path='key'; aiSay('Zvoleno: Cesta Klíče.'); return; }
-  if(/cesta zámku|zámek/.test(t)){ state.path='lock'; aiSay('Zvoleno: Cesta Zámku.'); return; }
-  if(/cesta orla|orel/.test(t)){ state.path='eagle'; aiSay('Zvoleno: Cesta Orla.'); return; }
-  aiSay('Rozumím ti, ale tohle zatím neumím. Zkus: „Šepot“, „AI odpověď“ nebo „Jaké jsou cesty?“');
+  if(/cesta kl(.|i)če|klíč/.test(t)){ state.path='key'; personaSay('Zvoleno: Cesta Klíče.'); return; }
+  if(/cesta zámku|zámek/.test(t)){ state.path='lock'; personaSay('Zvoleno: Cesta Zámku.'); return; }
+  if(/cesta orla|orel/.test(t)){ state.path='eagle'; personaSay('Zvoleno: Cesta Orla.'); return; }
+  personaSay('Rozumím ti, ale tohle zatím neumím. Zkus: „Šepot“, „AI odpověď“ nebo „Jaké jsou cesty?“');
 }
 
+/* -------------------- INIT -------------------- */
+if(!('speechSynthesis' in window)) $('#voiceToggle').style.display='none';
+if(!(window.SpeechRecognition||window.webkitSpeechRecognition)) $('#micToggle').style.display='none';
 updateStats(); renderLog(); draw();
