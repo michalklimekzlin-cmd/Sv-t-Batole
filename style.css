@@ -9,8 +9,9 @@
 body{font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Arial;background:var(--bg);color:var(--fg)}
 .topbar{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg);z-index:10}
 .brand{font-weight:800}
-.stats{display:flex;gap:12px;color:var(--muted);font-size:13px}
+.stats{display:flex;gap:12px;color:var(--muted);font-size:13px;align-items:center;flex-wrap:wrap}
 .stats .mission{color:var(--fg)}
+.voicebar .chip{padding:6px 10px}
 .wrap{max-width:980px;margin:0 auto;padding:10px}
 #game{width:100%;height:auto;border:1px solid var(--border);border-radius:12px;background:#0d0f14;display:block}
 .controls{margin-top:10px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px}
@@ -18,24 +19,38 @@ body{font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Ari
 .btn{border:1px solid var(--border);background:var(--card);color:var(--fg);padding:10px 12px;border-radius:10px;cursor:pointer;font-weight:700;min-height:40px}
 .btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#0b0b0c}
 .btn.danger{color:var(--danger);border-color:var(--danger)}
-.chip{border:1px solid var(--border);border-radius:999px;background:rgba(127,127,127,.08);padding:8px 12px}
+.chip{border:1px solid var(--border);border-radius:999px;background:rgba(127,127,127,.08);padding:8px 12px;cursor:pointer}
+.text{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--fg)}
 .muted{color:var(--muted)} .small{font-size:12px}
 .log{margin-top:10px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px}
 .log h3{margin-top:0}
 .log-item{border-bottom:1px solid var(--border);padding:6px 0;font-size:14px}
-
 .footer{display:flex;justify-content:space-between;align-items:center;padding:12px;border-top:1px solid var(--border);color:var(--muted)}
-
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:50}
 .overlay.show{display:flex}
 .overlay-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;max-width:520px;margin:0 14px;text-align:center}
-.overlay-card h1{margin:0 0 8px}
+.overlay-card h1,.overlay-card h2{margin:0 0 8px}
 .overlay-card .wide{width:100%}
-
 .tip{position:fixed;background:var(--card);border:1px solid var(--border);padding:10px 12px;border-radius:12px;color:var(--fg);z-index:40;display:none}
 #tip1{left:16px;bottom:140px}
 #tip2{left:16px;bottom:140px}
-
 @media (orientation:portrait){
   #game{height:60vh}
 }
+/* Chat */
+.chat{position:fixed;left:12px;right:12px;bottom:12px;z-index:60;max-width:980px;margin:0 auto}
+.chat-log{
+  max-height:38vh;overflow:auto;background:var(--card);
+  border:1px solid var(--border);border-radius:12px;padding:10px 10px 4px 10px;
+  box-shadow:0 10px 30px rgba(0,0,0,.25)
+}
+.msg{display:flex;gap:8px;margin:6px 0}
+.msg .bubble{padding:10px 12px;border-radius:12px;max-width:80%}
+.msg.ai .bubble{background:rgba(137,220,235,.12);border:1px solid var(--border)}
+.msg.me .bubble{background:rgba(122,162,247,.15);border:1px solid var(--border);margin-left:auto}
+.chat-choices{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.choice{
+  border:1px solid var(--border);background:var(--card);color:var(--fg);
+  padding:8px 10px;border-radius:999px;cursor:pointer
+}
+.choice:hover{border-color:var(--accent)}

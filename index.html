@@ -3,8 +3,9 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>BatoleSvět — v0.3</title>
+  <title>BatoleSvět — v0.3 (voice)</title>
   <link rel="stylesheet" href="style.css" />
+  <meta name="theme-color" content="#0b0b0c" />
 </head>
 <body>
   <header class="topbar">
@@ -15,6 +16,10 @@
       <span>Jasnost: <strong id="statClarity">1</strong></span>
       <span>Energie: <strong id="statEnergy">3</strong></span>
       <span class="mission">Mise: <strong id="missionProg">0/5</strong></span>
+      <span class="voicebar">
+        <button id="voiceToggle" class="chip">🎧 Hlas: off</button>
+        <button id="micToggle" class="chip">🎤 Mikrofon: off</button>
+      </span>
     </nav>
   </header>
 
@@ -57,16 +62,40 @@
     </div>
   </div>
 
+  <!-- Name overlay -->
+  <div id="nameAsk" class="overlay">
+    <div class="overlay-card">
+      <h2>Pojmenuj svého parťáka</h2>
+      <p class="muted">Napiš vlastní jméno, nebo ťukni na návrh.</p>
+      <input id="nameInput" class="text" type="text" maxlength="20" placeholder="Např. Orbit" />
+      <div class="row" style="margin-top:8px">
+        <button class="chip nameChoice" data-name="Orbit">Orbit</button>
+        <button class="chip nameChoice" data-name="Míza">Míza</button>
+        <button class="chip nameChoice" data-name="Iskra">Iskra</button>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <button id="nameConfirm" class="btn wide">Potvrdit jméno</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Tutorial bubbles -->
   <div id="tip1" class="tip">Zkus <strong>Šepot</strong>. (stojí 1 energii)</div>
   <div id="tip2" class="tip">Teď klikni na <strong>AI odpověď</strong>.</div>
 
+  <!-- Mission complete -->
   <div id="missionDone" class="overlay">
     <div class="overlay-card">
       <h1>Most je otevřen</h1>
       <p class="muted">Důvěra +1 • Energie +1</p>
       <button id="continueBtn" class="btn wide">Volné hraní</button>
     </div>
+  </div>
+
+  <!-- Chat Companion -->
+  <div id="chat" class="chat">
+    <div id="chatLog" class="chat-log" aria-live="polite"></div>
+    <div id="chatChoices" class="chat-choices"></div>
   </div>
 
   <script type="module" src="app.js"></script>
