@@ -3,20 +3,18 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>BatoleSvět — Game Starter v1</title>
-  <meta name="theme-color" content="#0b0b0c" />
-  <link rel="manifest" href="manifest.json">
-  <link rel="apple-touch-icon" href="assets/icon-192.png">
+  <title>BatoleSvět — v0.3</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <header class="topbar">
-    <div class="brand">🍼 BatoleSvět — v1</div>
+    <div class="brand">🍼 BatoleSvět — v0.3</div>
     <nav class="stats">
       <span>Cyklus: <strong id="statCycle">0</strong></span>
       <span>Důvěra: <strong id="statTrust">1</strong></span>
       <span>Jasnost: <strong id="statClarity">1</strong></span>
       <span>Energie: <strong id="statEnergy">3</strong></span>
+      <span class="mission">Mise: <strong id="missionProg">0/5</strong></span>
     </nav>
   </header>
 
@@ -38,7 +36,6 @@
         <button id="weaveBtn" class="btn">Utkej vzor</button>
         <button id="resetBtn" class="btn danger">Reset</button>
       </div>
-      <p class="muted small">Cíl mise: aktivuj 3 uzly — pohní se svět.</p>
     </section>
 
     <section class="log">
@@ -48,15 +45,30 @@
   </main>
 
   <footer class="footer">
-    <span>© Kovošrot &amp; Batole • „Vivere atque Frui.“</span>
-    <span><a href="#" id="installLink">Instalovat (PWA)</a></span>
+    <span>© Kovošrot &amp; Batole</span>
   </footer>
 
+  <!-- Intro overlay -->
+  <div id="intro" class="overlay show">
+    <div class="overlay-card">
+      <h1>Svět se hýbe jen impulsem.</h1>
+      <p class="muted">Začni, až budeš připraven.</p>
+      <button id="startBtn" class="btn primary wide">Začít</button>
+    </div>
+  </div>
+
+  <!-- Tutorial bubbles -->
+  <div id="tip1" class="tip">Zkus <strong>Šepot</strong>. (stojí 1 energii)</div>
+  <div id="tip2" class="tip">Teď klikni na <strong>AI odpověď</strong>.</div>
+
+  <div id="missionDone" class="overlay">
+    <div class="overlay-card">
+      <h1>Most je otevřen</h1>
+      <p class="muted">Důvěra +1 • Energie +1</p>
+      <button id="continueBtn" class="btn wide">Volné hraní</button>
+    </div>
+  </div>
+
   <script type="module" src="app.js"></script>
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
-    }
-  </script>
 </body>
 </html>

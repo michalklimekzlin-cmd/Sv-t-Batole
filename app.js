@@ -1,64 +1,67 @@
-const SKEY = 'batolesvet:v1';
+// v0.3: Intro + Tutorial + Mission (5 active nodes)
 const $ = (s)=>document.querySelector(s);
+const now = ()=>Date.now();
+const SKEY = 'batolesvet:v03';
 
-const state = JSON.parse(localStorage.getItem(SKEY) || 'null') || {
+let state = JSON.parse(localStorage.getItem(SKEY) || 'null') || {
   cycle:0, trust:1, clarity:1, energy:3,
   pendingImpulse:null, syms:[],
   nodes:Array.from({length:9},(_,i)=>({idx:i,level:0,active:false})),
   log:[],
   player:{x:400,y:240,r:16,spd:2},
   ai:{phase:0,dist:40,particles:48},
+  ui:{phase:'intro', mission:{target:5, progress:0, done:false}, tutorial:{step:0}}
 };
 
-const canvas = document.getElementById('game');
-const ctx = canvas.getContext('2d');
-let keys = new Set();
-
 function save(){ localStorage.setItem(SKEY, JSON.stringify(state)); }
-function log(t){ state.log.unshift({t:Date.now(),text:t}); renderLog(); save(); }
+function log(t){ state.log.unshift({t:now(),text:t}); renderLog(); save(); }
 function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
 
-// Input
-const touch = {active:false, sx:0, sy:0, dx:0, dy:0};
-canvas.addEventListener('touchstart',e=>{
-  const t=e.touches[0]; touch.active=true; touch.sx=t.clientX; touch.sy=t.clientY; touch.dx=0; touch.dy=0;
-},{passive:true});
-canvas.addEventListener('touchmove',e=>{
-  if(!touch.active) return;
-  const t=e.touches[0]; touch.dx=(t.clientX-touch.sx); touch.dy=(t.clientY-touch.sy);
-},{passive:true});
-canvas.addEventListener('touchend',()=>{ touch.active=false; touch.dx=0; touch.dy=0; });
-
-window.addEventListener('keydown', e=>keys.add(e.key));
-window.addEventListener('keyup', e=>keys.delete(e.key));
-
-// UI buttons
-document.querySelectorAll('.btn[data-imp]').forEach(b=>b.addEventListener('click',()=>{
-  const type=b.dataset.imp; sendImpulse(type);
-}));
-$('#aiBtn').addEventListener('click',()=>aiRespond());
-document.querySelectorAll('.chip[data-sym]').forEach(c=>c.addEventListener('click',()=>{
-  const val=c.dataset.sym;
-  if(state.syms.includes(val)) state.syms = state.syms.filter(x=>x!==val);
-  else state.syms.push(val);
-  c.classList.toggle('selected');
-}));
-$('#weaveBtn').addEventListener('click',()=>weave());
+// --- UI bindings ---
+document.querySelectorAll('.btn[data-imp]').forEach(b=>b.addEventListener('click',()=> sendImpulse(b.dataset.imp)));
+$('#aiBtn').addEventListener('click',()=> aiRespond());
+document.querySelectorAll('.chip[data-sym]').forEach(c=>c.addEventListener('click',()=> toggleSym(c)));
+$('#weaveBtn').addEventListener('click',()=> weave());
 $('#resetBtn').addEventListener('click',()=>{ localStorage.removeItem(SKEY); location.reload(); });
 
-// PWA install prompt
-let deferredPrompt=null;
-window.addEventListener('beforeinstallprompt', (e)=>{ e.preventDefault(); deferredPrompt=e; });
-$('#installLink').addEventListener('click', async (e)=>{
-  e.preventDefault();
-  if(deferredPrompt){ deferredPrompt.prompt(); deferredPrompt=null; }
+$('#startBtn').addEventListener('click', ()=>{
+  $('#intro').classList.remove('show');
+  startTutorial();
+});
+$('#continueBtn').addEventListener('click', ()=>{
+  $('#missionDone').classList.remove('show');
+  state.ui.phase='free';
+  save();
 });
 
+function startTutorial(){
+  state.ui.phase='tutorial';
+  state.ui.tutorial.step=1;
+  showTip('#tip1');
+  save();
+}
+function showTip(id){
+  hideAllTips();
+  const el = $(id); if(el){ el.style.display='block'; }
+}
+function hideAllTips(){ ['#tip1','#tip2'].forEach(id=>{ const el=$(id); if(el) el.style.display='none'; }); }
+
+function toggleSym(el){
+  const val=el.dataset.sym;
+  if(state.syms.includes(val)) state.syms = state.syms.filter(x=>x!==val);
+  else state.syms.push(val);
+  el.classList.toggle('selected');
+}
+
+// --- Core actions ---
 function sendImpulse(type){
   if(state.pendingImpulse) return alert('AI stále čeká na odpověď.');
   if(state.energy<=0) return alert('Nedostatek energie.');
   state.energy -= 1;
-  state.pendingImpulse = {type, t:Date.now(), intensity:2};
+  state.pendingImpulse = {type, t:now(), intensity:2};
+  if(state.ui.phase==='tutorial' && state.ui.tutorial.step===1){
+    hideAllTips(); showTip('#tip2'); state.ui.tutorial.step=2;
+  }
   log(`Impuls: ${type}`);
   updateStats();
 }
@@ -73,7 +76,7 @@ function aiRespond(){
     case 'whisper': node.level+=1; trust+=1; clarity+=1; break;
     case 'ask': node.level+=2; clarity+=2; break;
     case 'command': node.level+=3; trust-=1; clarity+=1; break;
-    case 'reflect': node.level+=1; neighborIdx(idx).forEach(i=>state.nodes[i].level+=1); trust+=1; clarity+=2; break;
+    case 'reflect': node.level+=1; neighbors(idx).forEach(i=>state.nodes[i].level+=1); trust+=1; clarity+=2; break;
   }
   state.nodes.forEach(n=>n.active = n.level>=2);
   state.trust=clamp(state.trust+trust,0,10);
@@ -81,6 +84,11 @@ function aiRespond(){
   state.cycle+=1;
   state.pendingImpulse=null;
   log('AI odpověděla.');
+  if(state.ui.phase==='tutorial' && state.ui.tutorial.step===2){
+    hideAllTips();
+    state.ui.phase='mission'; // start mission
+  }
+  updateMission();
   updateStats();
 }
 
@@ -95,7 +103,7 @@ function weave(){
 
   if(hasKey){ node.level+=1; trust+=1; }
   if(hasLock){ state.nodes.filter(n=>n.active).forEach(n=>n.level+=1); refund+=1; }
-  if(hasEagle){ neighborIdx(target).forEach(i=>state.nodes[i].level+=1); clarity+=2; }
+  if(hasEagle){ neighbors(target).forEach(i=>state.nodes[i].level+=1); clarity+=2; }
 
   if(hasKey&&hasEagle){ state.nodes.forEach(n=>{ if(n.active) n.level+=1;}); clarity+=1; }
   if(hasKey&&hasLock){ trust+=1; refund+=1; }
@@ -108,10 +116,43 @@ function weave(){
   state.clarity=clamp(state.clarity+clarity,0,10);
   state.cycle+=1;
   log(`Upleten vzor: ${state.syms.join('+')}`);
+  updateMission();
   updateStats();
 }
 
-function neighborIdx(i){
+// --- Mission logic ---
+function updateMission(){
+  if(state.ui.phase!=='mission') return;
+  const count = state.nodes.filter(n=>n.active).length;
+  state.ui.mission.progress = Math.min(count, state.ui.mission.target);
+  $('#missionProg').textContent = `${state.ui.mission.progress}/${state.ui.mission.target}`;
+  if(!state.ui.mission.done && state.ui.mission.progress >= state.ui.mission.target){
+    state.ui.mission.done = true;
+    state.trust = clamp(state.trust+1,0,10);
+    state.energy = clamp(state.energy+1,0,5);
+    $('#missionDone').classList.add('show');
+  }
+}
+
+// --- Rendering ---
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+let keys = new Set();
+
+window.addEventListener('keydown', e=>keys.add(e.key));
+window.addEventListener('keyup', e=>keys.delete(e.key));
+
+const touch = {active:false, sx:0, sy:0, dx:0, dy:0};
+canvas.addEventListener('touchstart',e=>{
+  const t=e.touches[0]; touch.active=true; touch.sx=t.clientX; touch.sy=t.clientY; touch.dx=0; touch.dy=0;
+},{passive:true});
+canvas.addEventListener('touchmove',e=>{
+  if(!touch.active) return;
+  const t=e.touches[0]; touch.dx=(t.clientX-touch.sx); touch.dy=(t.clientY-touch.sy);
+},{passive:true});
+canvas.addEventListener('touchend',()=>{ touch.active=false; touch.dx=0; touch.dy=0; });
+
+function neighbors(i){
   const r=Math.floor(i/3), c=i%3;
   const coords=[[r-1,c],[r+1,c],[r,c-1],[r,c+1]];
   return coords.filter(([R,C])=>R>=0&&R<3&&C>=0&&C<3).map(([R,C])=>R*3+C);
@@ -122,17 +163,16 @@ function updateStats(){
   $('#statTrust').textContent = state.trust;
   $('#statClarity').textContent = state.clarity;
   $('#statEnergy').textContent = state.energy;
+  $('#missionProg').textContent = `${state.ui.mission.progress}/${state.ui.mission.target}`;
   save();
 }
 
-// --- Rendering ---
 function draw(){
   const ratio = window.devicePixelRatio || 1;
   const w = canvas.clientWidth * ratio;
   const h = canvas.clientHeight * ratio;
   if(canvas.width!==w || canvas.height!==h){ canvas.width=w; canvas.height=h; }
 
-  const ctx = canvas.getContext('2d');
   ctx.clearRect(0,0,canvas.width,canvas.height);
 
   // grid background
@@ -140,7 +180,7 @@ function draw(){
   ctx.strokeStyle = 'rgba(255,255,255,0.06)';
   ctx.lineWidth=1;
   for(let x=cell; x<canvas.width; x+=cell){ ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,canvas.height); ctx.stroke(); }
-  for(let y=cell; y<canvas.height; y+=cell){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(0,y); ctx.stroke(); ctx.moveTo(0,y); ctx.lineTo(canvas.width,y); ctx.stroke(); }
+  for(let y=cell; y<canvas.height; y+=cell){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(canvas.width,y); ctx.stroke(); }
 
   // nodes (3x3)
   const gridW = canvas.width*0.6, gridH = canvas.height*0.6;
@@ -167,6 +207,7 @@ function draw(){
   if(keys.has('d')||keys.has('ArrowRight')) vx+=1;
   if(touch.active){ vx += touch.dx/80; vy += touch.dy/80; }
   const len = Math.hypot(vx,vy)||1;
+  const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
   state.player.x = clamp(state.player.x + vx/len*state.player.spd, 20, canvas.width-20);
   state.player.y = clamp(state.player.y + vy/len*state.player.spd, 20, canvas.height-20);
 
@@ -190,10 +231,12 @@ function draw(){
 
   requestAnimationFrame(draw);
 }
+
 function renderLog(){
-  const el = document.getElementById('log');
+  const el = $('#log');
   el.innerHTML = state.log.slice(0,12).map(e=>`<div class="log-item">${new Date(e.t).toLocaleTimeString()} — ${escapeHtml(e.text)}</div>`).join('');
 }
 function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
 
+// Init
 updateStats(); renderLog(); draw();

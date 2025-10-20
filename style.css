@@ -1,15 +1,16 @@
 :root {
   --bg:#0b0b0c; --fg:#e9e9ea; --muted:#a7a8ad; --card:#15161a; --border:#2a2b31;
-  --accent:#7aa2f7; --accent2:#89dceb; --danger:#ef4444; --ok:#10b981;
+  --accent:#7aa2f7; --accent2:#89dceb; --danger:#ef4444;
 }
 @media (prefers-color-scheme: light){
-  :root{--bg:#fafafa;--fg:#111;--muted:#5b5e66;--card:#fff;--border:#e8e8ef;--accent:#3b82f6;--accent2:#06b6d4;--danger:#ef4444;--ok:#059669;}
+  :root{--bg:#fafafa;--fg:#111;--muted:#5b5e66;--card:#fff;--border:#e8e8ef;--accent:#3b82f6;--accent2:#06b6d4;--danger:#ef4444;}
 }
 *{box-sizing:border-box} html,body{margin:0;padding:0}
 body{font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Arial;background:var(--bg);color:var(--fg)}
 .topbar{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg);z-index:10}
 .brand{font-weight:800}
 .stats{display:flex;gap:12px;color:var(--muted);font-size:13px}
+.stats .mission{color:var(--fg)}
 .wrap{max-width:980px;margin:0 auto;padding:10px}
 #game{width:100%;height:auto;border:1px solid var(--border);border-radius:12px;background:#0d0f14;display:block}
 .controls{margin-top:10px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px}
@@ -22,7 +23,19 @@ body{font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Ari
 .log{margin-top:10px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px}
 .log h3{margin-top:0}
 .log-item{border-bottom:1px solid var(--border);padding:6px 0;font-size:14px}
+
 .footer{display:flex;justify-content:space-between;align-items:center;padding:12px;border-top:1px solid var(--border);color:var(--muted)}
+
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:50}
+.overlay.show{display:flex}
+.overlay-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;max-width:520px;margin:0 14px;text-align:center}
+.overlay-card h1{margin:0 0 8px}
+.overlay-card .wide{width:100%}
+
+.tip{position:fixed;background:var(--card);border:1px solid var(--border);padding:10px 12px;border-radius:12px;color:var(--fg);z-index:40;display:none}
+#tip1{left:16px;bottom:140px}
+#tip2{left:16px;bottom:140px}
+
 @media (orientation:portrait){
   #game{height:60vh}
 }
