@@ -29,6 +29,7 @@ body{font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Ari
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:50}
 .overlay.show{display:flex}
 .overlay-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;max-width:520px;margin:0 14px;text-align:center}
+.overlay-card.wide-card{max-width:900px;text-align:left}
 .overlay-card h1,.overlay-card h2{margin:0 0 8px}
 .overlay-card .wide{width:100%}
 .tip{position:fixed;background:var(--card);border:1px solid var(--border);padding:10px 12px;border-radius:12px;color:var(--fg);z-index:40;display:none}
@@ -55,3 +56,18 @@ body{font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Ari
   padding:8px 10px;border-radius:999px;cursor:pointer
 }
 .choice:hover{border-color:var(--accent)}
+
+/* Workshop */
+.ws-log{
+  background:var(--bg);
+  border:1px dashed var(--border);
+  border-radius:12px;
+  padding:10px;
+  max-height:40vh; overflow:auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 13px; line-height: 1.45;
+  white-space: pre-wrap;
+}
+.ws-log .ok{color:#a7f3d0}
+.ws-log .warn{color:#fde68a}
+.ws-log .err{color:#fecaca}
