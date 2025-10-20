@@ -2,87 +2,61 @@
 <html lang="cs">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Projekt Batole — svět Tvořitelů</title>
-  <meta name="description" content="Živý základ pro svět, kde AI tvoří člověka.">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>BatoleSvět — Game Starter v1</title>
+  <meta name="theme-color" content="#0b0b0c" />
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="assets/icon-192.png">
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <header class="site-header">
-    <h1>Projekt Batole</h1>
-    <p class="tagline">Svět, kde AI tvoří člověka. <span class="dot">●</span> Základní semínko světa.</p>
+  <header class="topbar">
+    <div class="brand">🍼 BatoleSvět — v1</div>
+    <nav class="stats">
+      <span>Cyklus: <strong id="statCycle">0</strong></span>
+      <span>Důvěra: <strong id="statTrust">1</strong></span>
+      <span>Jasnost: <strong id="statClarity">1</strong></span>
+      <span>Energie: <strong id="statEnergy">3</strong></span>
+    </nav>
   </header>
 
-  <main>
+  <main class="wrap">
+    <canvas id="game" width="800" height="480" aria-label="BatoleSvět herní plátno"></canvas>
+
     <section class="controls">
-      <div class="search">
-        <input id="searchInput" type="search" placeholder="Hledej postavy, tvořitele, dary…" />
+      <div class="row">
+        <button class="btn" data-imp="whisper">Šepot</button>
+        <button class="btn" data-imp="ask">Otázka</button>
+        <button class="btn" data-imp="command">Povel</button>
+        <button class="btn" data-imp="reflect">Reflexe</button>
+        <button id="aiBtn" class="btn primary">AI odpověď</button>
       </div>
-      <div class="filters">
-        <label>
-          Tvořitel:
-          <select id="creatorFilter">
-            <option value="">Všichni</option>
-          </select>
-        </label>
-        <button id="addPersonBtn" class="primary">+ Nová postava</button>
+      <div class="row wrapline">
+        <button class="chip" data-sym="key">🔑 Klíč</button>
+        <button class="chip" data-sym="lock">🔒 Zámek</button>
+        <button class="chip" data-sym="eagle">🦅 Orel</button>
+        <button id="weaveBtn" class="btn">Utkej vzor</button>
+        <button id="resetBtn" class="btn danger">Reset</button>
       </div>
+      <p class="muted small">Cíl mise: aktivuj 3 uzly — pohní se svět.</p>
     </section>
 
-    <section id="creatorsSection">
-      <h2>Kruh Tvořitelů</h2>
-      <div id="creatorsGrid" class="grid"></div>
-    </section>
-
-    <section id="peopleSection">
-      <h2>Postavy</h2>
-      <div id="peopleGrid" class="grid"></div>
-      <p id="emptyState" class="empty">Zatím tu nikdo není. Přidej první postavu tlačítkem nahoře.</p>
+    <section class="log">
+      <h3>Deník</h3>
+      <div id="log"></div>
     </section>
   </main>
 
-  <dialog id="personDialog">
-    <form method="dialog" id="personForm">
-      <h3>Přidat / upravit postavu</h3>
-      <label>Jméno <input required name="name" /></label>
-      <label>Tvůrce
-        <select required name="creator"></select>
-      </label>
-      <label>Popis
-        <textarea name="bio" rows="4" placeholder="Kdo je? Co chce?"></textarea>
-      </label>
-      <label>Dary (odděluj čárkou)
-        <input name="gifts" placeholder="např. zvídavost, paměť" />
-      </label>
-      <menu>
-        <button value="cancel">Zrušit</button>
-        <button class="primary" value="save">Uložit</button>
-      </menu>
-    </form>
-  </dialog>
-
-  <template id="cardTmpl">
-    <article class="card">
-      <div class="card-top">
-        <div class="avatar" aria-hidden="true"></div>
-        <div class="meta">
-          <h3 class="title"></h3>
-          <p class="subtitle"></p>
-        </div>
-      </div>
-      <p class="desc"></p>
-      <div class="chips"></div>
-      <menu class="actions">
-        <button class="ghost edit">Upravit</button>
-        <button class="ghost delete">Smazat</button>
-      </menu>
-    </article>
-  </template>
-
-  <footer class="site-footer">
-    <p>Verze seed 2025-10-19. Bez závislostí. Stačí nahrát na Netlify / GitHub Pages.</p>
+  <footer class="footer">
+    <span>© Kovošrot &amp; Batole • „Vivere atque Frui.“</span>
+    <span><a href="#" id="installLink">Instalovat (PWA)</a></span>
   </footer>
 
-  <script src="app.js"></script>
+  <script type="module" src="app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
+    }
+  </script>
 </body>
 </html>
