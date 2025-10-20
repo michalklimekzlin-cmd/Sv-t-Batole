@@ -3,13 +3,13 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>BatoleSvět — v0.3 (voice & bros)</title>
+  <title>BatoleSvět — v0.31 (AI Workshop)</title>
   <link rel="stylesheet" href="style.css" />
   <meta name="theme-color" content="#0b0b0c" />
 </head>
 <body>
   <header class="topbar">
-    <div class="brand">🍼 BatoleSvět — v0.3</div>
+    <div class="brand">🍼 BatoleSvět — v0.31</div>
     <nav class="stats">
       <span>Cyklus: <strong id="statCycle">0</strong></span>
       <span>Důvěra: <strong id="statTrust">1</strong></span>
@@ -20,6 +20,7 @@
         <button id="voiceToggle" class="chip">🎧 Hlas: off</button>
         <button id="micToggle" class="chip">🎤 Mikrofon: off</button>
         <button id="settingsBtn" class="chip">⚙️ Parťák</button>
+        <button id="workshopBtn" class="chip">🧪 AI dílna</button>
       </span>
     </nav>
   </header>
@@ -41,6 +42,7 @@
         <button class="chip" data-sym="eagle">🦅 Orel</button>
         <button id="weaveBtn" class="btn">Utkej vzor</button>
         <button id="resetBtn" class="btn danger">Reset</button>
+        <button id="shopBtn" class="btn" disabled title="Brzy">🛍️ Obchod (brzy)</button>
       </div>
     </section>
 
@@ -63,21 +65,14 @@
     </div>
   </div>
 
-  <!-- Pojmenuj parťáka + vyber osobnost -->
+  <!-- Pojmenuj parťáka + persona -->
   <div id="nameAsk" class="overlay">
     <div class="overlay-card">
       <h2>Pojmenuj svého parťáka</h2>
       <p class="muted">Napiš vlastní jméno, nebo ťukni na návrh a vyber styl mluvy.</p>
       <input id="nameInput" class="text" type="text" maxlength="20" placeholder="Např. Orbit" />
-      <div class="row" style="margin-top:8px">
-        <button class="chip nameChoice" data-name="Orbit">Orbit</button>
-        <button class="chip nameChoice" data-name="Míza">Míza</button>
-        <button class="chip nameChoice" data-name="Iskra">Iskra</button>
-      </div>
-      <div class="row" style="margin-top:12px">
-        <button class="chip personaChoice" data-persona="orbit">🌀 Orbit (vědec)</button>
-        <button class="chip personaChoice" data-persona="miza">🌱 Míza (empatická)</button>
-        <button class="chip personaChoice" data-persona="iskra">⚡ Iskra (vtipálek)</button>
+      <div id="personaRow1" class="row" style="margin-top:8px">
+        <!-- dynamicky doplněno z PERSONAS -->
       </div>
       <div class="row" style="margin-top:8px">
         <button id="nameConfirm" class="btn wide">Pokračovat</button>
@@ -89,10 +84,8 @@
   <div id="settings" class="overlay">
     <div class="overlay-card">
       <h2>Parťák — nastavení</h2>
-      <div class="row" style="margin-bottom:8px">
-        <button class="chip personaChoice" data-persona="orbit">🌀 Orbit</button>
-        <button class="chip personaChoice" data-persona="miza">🌱 Míza</button>
-        <button class="chip personaChoice" data-persona="iskra">⚡ Iskra</button>
+      <div id="personaRow2" class="row" style="margin-bottom:8px">
+        <!-- dynamicky doplněno z PERSONAS -->
       </div>
       <div class="row" style="margin-bottom:8px">
         <button id="toneToggle" class="chip">🗣️ Tón: Auto</button>
@@ -103,7 +96,7 @@
     </div>
   </div>
 
-  <!-- Tutorial bubliny -->
+  <!-- Tutorial -->
   <div id="tip1" class="tip">Zkus <strong>Šepot</strong> (stojí 1 energii).</div>
   <div id="tip2" class="tip">Teď klikni na <strong>AI odpověď</strong>.</div>
 
@@ -120,6 +113,21 @@
   <div id="chat" class="chat">
     <div id="chatLog" class="chat-log" aria-live="polite"></div>
     <div id="chatChoices" class="chat-choices"></div>
+  </div>
+
+  <!-- AI Workshop -->
+  <div id="workshop" class="overlay">
+    <div class="overlay-card wide-card">
+      <h2>🧪 AI dílna</h2>
+      <p class="muted small">Agenti navrhnou patch. Ty rozhodneš: Aplikovat / Zpět.</p>
+      <div id="wsLog" class="ws-log"></div>
+      <div class="row" style="margin-top:10px">
+        <button id="wsPropose" class="btn">Navrhnout patch</button>
+        <button id="wsApply" class="btn primary">Aplikovat</button>
+        <button id="wsUndo" class="btn">Zpět</button>
+        <button id="wsClose" class="btn">Zavřít</button>
+      </div>
+    </div>
   </div>
 
   <script type="module" src="app.js"></script>
