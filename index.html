@@ -3,9 +3,20 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>BatoleSvět — v0.31 (AI Workshop)</title>
+  <title>BatoleSvět — v0.31 (AI Workshop + BroNet)</title>
   <link rel="stylesheet" href="style.css" />
   <meta name="theme-color" content="#0b0b0c" />
+  <!-- Jednorázové odregistrování SW/cache při první návštěvě po updatu. -->
+  <script>
+  (function(){
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(regs => {
+        regs.forEach(r => r.unregister());
+        if (window.caches) caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
+      }).catch(()=>{});
+    }
+  })();
+  </script>
 </head>
 <body>
   <header class="topbar">
@@ -42,7 +53,7 @@
         <button class="chip" data-sym="eagle">🦅 Orel</button>
         <button id="weaveBtn" class="btn">Utkej vzor</button>
         <button id="resetBtn" class="btn danger">Reset</button>
-        <button id="shopBtn" class="btn" disabled title="Brzy">🛍️ Obchod (brzy)</button>
+        <button id="shopBtn" class="btn">🛍️ Obchod (brzy)</button>
       </div>
     </section>
 
@@ -71,9 +82,7 @@
       <h2>Pojmenuj svého parťáka</h2>
       <p class="muted">Napiš vlastní jméno, nebo ťukni na návrh a vyber styl mluvy.</p>
       <input id="nameInput" class="text" type="text" maxlength="20" placeholder="Např. Orbit" />
-      <div id="personaRow1" class="row" style="margin-top:8px">
-        <!-- dynamicky doplněno z PERSONAS -->
-      </div>
+      <div id="personaRow1" class="row" style="margin-top:8px"></div>
       <div class="row" style="margin-top:8px">
         <button id="nameConfirm" class="btn wide">Pokračovat</button>
       </div>
@@ -84,9 +93,7 @@
   <div id="settings" class="overlay">
     <div class="overlay-card">
       <h2>Parťák — nastavení</h2>
-      <div id="personaRow2" class="row" style="margin-bottom:8px">
-        <!-- dynamicky doplněno z PERSONAS -->
-      </div>
+      <div id="personaRow2" class="row" style="margin-bottom:8px"></div>
       <div class="row" style="margin-bottom:8px">
         <button id="toneToggle" class="chip">🗣️ Tón: Auto</button>
       </div>
@@ -109,21 +116,13 @@
     </div>
   </div>
 
-    <!-- Chat -->
+  <!-- Chat -->
   <div id="chat" class="chat">
     <div id="chatLog" class="chat-log" aria-live="polite"></div>
     <div id="chatChoices" class="chat-choices"></div>
   </div>
-
-  <!-- FAB pro zobrazení/sbalení chatu -->
   <button id="chatToggle" class="fab" aria-label="Otevřít chat">💬</button>
-
-  <!-- Toast na krátké hlášky -->
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <div id="chat" class="chat">
-    <div id="chatLog" class="chat-log" aria-live="polite"></div>
-    <div id="chatChoices" class="chat-choices"></div>
-  </div>
 
   <!-- AI Workshop -->
   <div id="workshop" class="overlay">
@@ -140,6 +139,6 @@
     </div>
   </div>
 
-  <script type="module" src="app.js"></script>
+  <script type="module" src="app.v031.js"></script>
 </body>
 </html>

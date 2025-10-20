@@ -39,38 +39,6 @@ body{font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Ari
   #game{height:60vh}
 }
 
-/* Chat */
-.chat{position:fixed;left:12px;right:12px;bottom:12px;z-index:60;max-width:980px;margin:0 auto}
-.chat-log{
-  max-height:38vh;overflow:auto;background:var(--card);
-  border:1px solid var(--border);border-radius:12px;padding:10px 10px 4px 10px;
-  box-shadow:0 10px 30px rgba(0,0,0,.25)
-}
-.msg{display:flex;gap:8px;margin:6px 0}
-.msg .bubble{padding:10px 12px;border-radius:12px;max-width:80%}
-.msg.ai .bubble{background:rgba(137,220,235,.12);border:1px solid var(--border)}
-.msg.me .bubble{background:rgba(122,162,247,.15);border:1px solid var(--border);margin-left:auto}
-.chat-choices{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
-.choice{
-  border:1px solid var(--border);background:var(--card);color:var(--fg);
-  padding:8px 10px;border-radius:999px;cursor:pointer
-}
-.choice:hover{border-color:var(--accent)}
-
-/* Workshop */
-.ws-log{
-  background:var(--bg);
-  border:1px dashed var(--border);
-  border-radius:12px;
-  padding:10px;
-  max-height:40vh; overflow:auto;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 13px; line-height: 1.45;
-  white-space: pre-wrap;
-}
-.ws-log .ok{color:#a7f3d0}
-.ws-log .warn{color:#fde68a}
-.ws-log .err{color:#fecaca}
 /* Chat – menší a sbalitelný */
 .chat{
   position:fixed; right:12px; bottom:68px; z-index:60;
@@ -82,7 +50,13 @@ body{font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Ari
   border:1px solid var(--border); border-radius:12px;
   padding:10px 10px 4px; box-shadow:0 10px 30px rgba(0,0,0,.25)
 }
-.chat-choices{ display:flex; gap:8px; flex-wrap:wrap; margin-top:6px }
+.msg{display:flex;gap:8px;margin:6px 0}
+.msg .bubble{padding:10px 12px;border-radius:12px;max-width:80%}
+.msg.ai .bubble{background:rgba(137,220,235,.12);border:1px solid var(--border)}
+.msg.me .bubble{background:rgba(122,162,247,.15);border:1px solid var(--border);margin-left:auto}
+.chat-choices{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.choice{border:1px solid var(--border);background:var(--card);color:var(--fg);padding:8px 10px;border-radius:999px;cursor:pointer}
+.choice:hover{border-color:var(--accent)}
 
 /* FAB tlačítko pro chat */
 .fab{
@@ -102,3 +76,18 @@ body{font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Ari
   padding:8px 14px; font-size:14px; display:none;
 }
 .toast.show{ display:block; }
+
+/* Workshop */
+.ws-log{
+  background:var(--bg);
+  border:1px dashed var(--border);
+  border-radius:12px;
+  padding:10px;
+  max-height:40vh; overflow:auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 13px; line-height: 1.45;
+  white-space: pre-wrap;
+}
+.ws-log .ok{color:#a7f3d0}
+.ws-log .warn{color:#fde68a}
+.ws-log .err{color:#fecaca}
