@@ -2,6 +2,52 @@
 const $ = (s)=>document.querySelector(s);
 const now = ()=>Date.now();
 const SKEY = 'batolesvet:v031';
+// --- BroNet: vnitřní síť agentů ---
+const BroNet = {
+  subs:{},
+  publish(topic, payload){ (this.subs[topic]||[]).forEach(fn=>fn(payload)); },
+  subscribe(topic, fn){ this.subs[topic] = (this.subs[topic]||[]).concat(fn); }
+};
+
+// Interní agenti (jména + role)
+const AGENTS = {
+  sigma:  {name:'Σ Coordinator', role:'Koordinuje brášky, hlídá rytmus a plán.'},
+  alpha:  {name:'α Planner',     role:'Vymyslí další drobný krok.'},
+  beta:   {name:'β Coder',       role:'Navrhne bezpečnou změnu stavu/UI.'},
+  gamma:  {name:'γ Reviewer',    role:'Zkontroluje dopad a etiku.'}
+};
+
+// Fronty drobných „dění dopředu“
+let hintQueue = [];     // krátké nápovědy (věty)
+let preActQueue = [];   // malé ne-cheatující zásahy (±1 level, jemné rozsvícení apod.)
+
+function enqueueHint(text){ hintQueue.push(text); }
+function enqueuePreAct(fn){ preActQueue.push(fn); }
+
+// Coordinator: reaguje na změnu cesty a přednaplní fronty
+BroNet.subscribe('pathChanged', (path)=>{
+  // vyčisti a připrav balíček na 2–3 cykly dopředu
+  hintQueue = []; preActQueue = [];
+
+  if(path==='key'){ // jasnost
+    enqueueHint('Za pár tahů zkus přesnou Otázku – dodá víc jasnosti.');
+    enqueuePreAct(()=>{ // jemně rozsvítí sousedy cílového uzlu
+      const i = Math.floor(Math.random()*state.nodes.length);
+      neighbors(i).forEach(n=> state.nodes[n].level += 1);
+    });
+  } else if(path==='lock'){ // stabilita
+    enqueueHint('Drž rytmus. Zpevním ti aktivní uzly, až bude křehko.');
+    enqueuePreAct(()=>{
+      state.nodes.filter(n=>n.active).forEach(n=> n.level += 1);
+    });
+  } else if(path==='eagle'){ // propojení
+    enqueueHint('Zkus tkaní s Orlem – rozsype se jiskra do okolí.');
+    enqueuePreAct(()=>{
+      const i = Math.floor(Math.random()*state.nodes.length);
+      neighbors(i).forEach(n=> state.nodes[n].level += 1);
+    });
+  }
+});
 
 let state = JSON.parse(localStorage.getItem(SKEY) || 'null') || {
   cycle:0, trust:1, clarity:1, energy:3,
