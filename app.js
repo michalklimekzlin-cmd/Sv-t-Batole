@@ -73,6 +73,13 @@ async function boot(){
     const pt=('touches' in e && e.touches?.length) ? toWorld(e.touches[0].clientX, e.touches[0].clientY) : toWorld(e.clientX, e.clientY);
     bus.emit('impulse',{pos:pt});
     e.preventDefault();
+    // ULOŽENÍ PAMĚTI ORBITU (posledních 20 ťuků)
+try {
+  const mem = JSON.parse(localStorage.getItem('orbit_memory') || '[]');
+  mem.push({ t: Date.now(), x: pt.x, y: pt.y });
+  while (mem.length > 20) mem.shift();
+  localStorage.setItem('orbit_memory', JSON.stringify(mem));
+} catch(e){ /* ignore */ }
   };
   canvas.addEventListener('pointerdown', emitImpulse);
   canvas.addEventListener('touchstart', emitImpulse, {passive:false});
