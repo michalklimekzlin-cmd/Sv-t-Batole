@@ -122,3 +122,37 @@ $pauseBtn?.addEventListener('click', () => {
   World.paused = !World.paused;
   $pauseBtn.textContent = World.paused ? '▶︎ ŽIVĚ' : '⏯︎ ŽIVĚ';
 });
+
+// ... celý tvůj kód nahoře (nastavení, kreslení, svět atd.)
+
+// 💓 TLUKOT SRDCE BATOLESVĚTA
+let heartTime = 0;
+
+function drawHeartbeat(ctx, t) {
+  const beat = Math.sin(t / 1000) * 0.5 + 0.5;
+  const intensity = beat * 0.15;
+
+  ctx.save();
+  ctx.fillStyle = `rgba(255, 255, 255, ${intensity})`;
+  ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+  ctx.restore();
+}
+
+// 🔄 hlavní smyčka – svět žije
+(function loop(){
+  const now = performance.now();
+  const dt = now - World.lastMs;
+  World.lastMs = now;
+  const canvas = document.querySelector('#glview');
+  if (!canvas) return requestAnimationFrame(loop);
+  const ctx = canvas.getContext('2d');
+
+  worldUpdate(dt, ctx, canvas);
+  redrawAll(ctx);
+
+  // 💫 DÝCHÁNÍ – svět žije i v tichu
+  heartTime += dt;
+  drawHeartbeat(ctx, heartTime);
+
+  requestAnimationFrame(loop);
+})();
