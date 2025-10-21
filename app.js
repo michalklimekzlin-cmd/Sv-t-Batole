@@ -1,6 +1,10 @@
 // Batolesvět — Level 1: Základní dech
 import { ImpulseCore } from "./src/impulse_core.js";
 
+// === BIO STAV SVĚTA ===
+let light = 0;       // 0..100 (%)
+let bioEnergy = 0;   // energie (libovolné jednotky)
+
 window.addEventListener("load", () => {
   const canvas = document.querySelector("#glview");
   canvas.width = window.innerWidth;
