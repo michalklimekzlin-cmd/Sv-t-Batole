@@ -23,6 +23,25 @@
   </div>
   <canvas id="glview"></canvas>
 
+<body>
+  <canvas id="glview"></canvas> <!-- nebo id="canvas" -->
+
+  <!-- 🟢 ORBIT CHAT UI -->
+  <div id="hud" style="position:fixed;bottom:10px;left:10px;z-index:1000;
+    background:rgba(0,0,0,0.5);padding:10px;border-radius:10px;color:white;font-family:monospace;">
+    <div>Iskra: <span id="iskraCount">0</span></div>
+    <div style="margin-top:5px;">
+      <input id="msg" data-role="chat-input" placeholder="napiš Orbitovi…" 
+             style="width:200px;background:#222;color:#fff;border:1px solid #555;padding:4px;border-radius:4px;">
+      <button id="send" data-role="chat-send" 
+              style="background:#7fffd4;border:none;padding:4px 10px;border-radius:4px;color:#000;font-weight:bold;">
+        Poslat
+      </button>
+    </div>
+  </div>
+
+  <script type="module" src="./app.js?v=038"></script>
+</body>
   <div id="cmdbar">
     <input id="cmd" placeholder="Napiš Orbitovi: např. 'řekni Ahoj', 'postav čtverec', 'následuj mě'…" />
     <button id="send">Poslat</button>
