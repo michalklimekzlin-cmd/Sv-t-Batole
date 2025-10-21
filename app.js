@@ -108,6 +108,7 @@ function worldUpdate(dtMs, ctx, canvas) {
 updateLight(now);
 photosynthesize(dt);
 updateBioUI();
+updateHeartbeat(dt);
   // přepiš si dle svého: musíš mít canvas/ctx v dosahu:
   const canvas = document.querySelector('#glview') || document.querySelector('#canvas');
   if (!canvas) return requestAnimationFrame(loop);
