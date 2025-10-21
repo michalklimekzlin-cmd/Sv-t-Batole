@@ -31,4 +31,5 @@ function redrawAll(ctx) {
     ctx.fillStyle = t.color;
     ctx.fillText(t.char, t.x, t.y);
   }
+redrawAll(ctx);
 }
