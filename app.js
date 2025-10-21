@@ -180,3 +180,27 @@ function updateLifeCycle() {
 
 // Spuštění biologického cyklu
 setInterval(updateLifeCycle, 100);
+
+// === DENNÍ CYKLUS BATOLesVĚTA ===
+function updateDayCycle() {
+  const canvas = document.querySelector("#glview");
+  const ctx = canvas.getContext("2d");
+
+  // Vypočítej intenzitu světla (0 = noc, 1 = den)
+  const intensity = light / 100;
+
+  // Barva oblohy podle intenzity světla
+  const r = Math.floor(10 + intensity * 40);
+  const g = Math.floor(10 + intensity * 70);
+  const b = Math.floor(30 + intensity * 160);
+
+  // Nastavení pozadí
+  canvas.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+
+  // Efekt "dýchání" — jemné pulzování plátna
+  const pulse = Math.sin(Date.now() / 1000) * 0.5 + 0.5;
+  canvas.style.opacity = 0.95 + pulse * 0.05;
+}
+
+// Spouštíme každých 200 ms
+setInterval(updateDayCycle, 200);
