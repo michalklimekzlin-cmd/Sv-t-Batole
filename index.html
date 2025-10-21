@@ -1,26 +1,24 @@
 <!doctype html>
 <html lang="cs">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Batolesvět – DECH demo</title>
   <style>
-    html, body { margin:0; height:100%; background:#0a0b10; color:#cfd2d6; font-family: system-ui, sans-serif; }
-    #hud { position:fixed; top:10px; left:10px; background:rgba(0,0,0,0.45); padding:10px 12px; border-radius:8px; font-size:14px; }
-    #canvas { width:100%; height:100%; display:block; touch-action: none; }
-    a { color:#9be1ff; }
-    .kbd { padding:1px 5px; border:1px solid #666; border-radius:4px; font-size:12px; }
+    html,body{margin:0;height:100%;background:#0a0b10;color:#cfd2d6;font-family:system-ui,sans-serif}
+    #hud{position:fixed;top:10px;left:10px;background:rgba(0,0,0,.45);padding:10px 12px;border-radius:8px;font-size:14px}
+    #canvas{width:100%;height:100%;display:block;touch-action:none}
+    a{color:#9be1ff}
   </style>
 </head>
 <body>
   <div id="hud">
-    <div><strong>Batolesvět – DECH demo</strong></div>
+    <strong>Batolesvět – DECH demo</strong>
     <div>Tip: ťukni/klikni do prostoru → impuls. Iskra: <strong id="iskra">0</strong></div>
   </div>
   <canvas id="canvas"></canvas>
-  <script type="module">
-    import { boot } from './src/main.js';
-    boot();
-  </script>
+
+  <!-- DŮLEŽITÉ: máme skripty v kořeni, ne v /src, proto načítáme ./app.js -->
+  <script type="module" src="./app.js?v=3"></script>
 </body>
 </html>
