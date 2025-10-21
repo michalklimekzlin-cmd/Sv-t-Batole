@@ -109,7 +109,39 @@ function worldUpdate(dtMs, ctx, canvas) {
     applyOp(op, ctx);
   }
 }
+// ☀︎ světlo podle času
+function updateLight(nowMs) {
+  // ~1 minuta cyklus tam/zpět (100 * 600ms)
+  if (light >= 100) lightDir = -1;
+  if (light <= 0)   lightDir = 1;
+  light += lightDir * 0.2;            // krok
+  light = Math.max(0, Math.min(100, light));
+}
 
+// 🌿 fotosyntéza → roste bioEnergy, když je světlo
+function photosynthesize(dtMs) {
+  const dt = dtMs / 1000;             // na sekundy
+  const k  = (light / 100) * 2;       // výkon 0..2
+  bioEnergy += k * dt;
+}
+
+// HUD aktualizace
+function updateBioUI() {
+  const elL = document.getElementById('lightLevel');
+  const elB = document.getElementById('bioEnergy');
+  if (elL) elL.textContent = `☀︎ ${Math.round(light)}%`;
+  if (elB) elB.textContent = `⚡ ${Math.floor(bioEnergy)}`;
+}
+
+// 💓 tlukot srdce – jen log/trigger každých ~600ms
+function updateHeartbeat(dtMs) {
+  heartTime += dtMs;
+  if (heartTime > 600) {
+    // sem klidně později dáme vizuální puls
+    // console.log('💓 Batolesvět bije…');
+    heartTime = 0;
+  }
+}
 // Hlavní smyčka – napoj se, kde voláš redrawAll(ctx)
 (function loop(){
   const now = performance.now();
