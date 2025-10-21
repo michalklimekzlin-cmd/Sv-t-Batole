@@ -1,318 +1,198 @@
-// Batolesvět — Level 1: Základní dech
-import { ImpulseCore } from "./src/impulse_core.js";
-// --- World state (čas + biologie) ---
+// ================================================================
+// Batolesvět — app.js (drop-in, samostatná verze)
+// Světlo (den/noc) → fotosyntéza → energie ⚡ → tlukot srdce 💓
+// + živé písmenkové „dechy“ na plátně
+// ================================================================
+
+// ---------- Canvas / Resize ----------
+const canvas = document.querySelector('#glview');
+const ctx = canvas.getContext('2d');
+function resize() {
+  const dpr = Math.max(1, Math.floor(window.devicePixelRatio || 1));
+  canvas.width  = Math.floor(window.innerWidth  * dpr);
+  canvas.height = Math.floor(window.innerHeight * dpr);
+  canvas.style.width  = '100vw';
+  canvas.style.height = '100vh';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // kreslíme v CSS pixelech
+}
+window.addEventListener('resize', resize);
+resize();
+
+// ---------- World state ----------
 const World = { lastMs: 0 };
-let light = 0;          // 0–100 (den/noc)
-let lightDir = 1;       // 1 = rozednívá se, -1 = stmívá se
-let bioEnergy = 0;      // „živinová“ energie
-let heartTime = 0;      // ms akumulátor pro tlukot
-// --- World state (čas + biologie) ---
-const World = { lastMs: 0 };
-let light = 0;          // 0–100 (den/noc)
-let lightDir = 1;       // 1 = rozednívá se, -1 = stmívá se
-let bioEnergy = 0;      // „živinová“ energie
-let heartTime = 0;      // ms akumulátor pro tlukot
 
-// === BIO STAV SVĚTA ===
-let light = 0;       // 0..100 (%)
-let bioEnergy = 0;   // energie (libovolné jednotky)
-
-window.addEventListener("load", () => {
-  const canvas = document.querySelector("#glview");
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-
-  const core = new ImpulseCore(canvas);
-  core.start();
-const ctx = document.querySelector("#glcanvas").getContext("2d");
-
-function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  redrawAll(ctx);
-
-  const char = String.fromCharCode(65 + Math.random() * 25); // náhodné písmeno
-  const x = Math.random() * canvas.width;
-  const y = Math.random() * canvas.height;
-  const color = "rgba(0,255,150,0.8)";
-  drawStableChar(ctx, char, x, y, color);
-
-  requestAnimationFrame(draw);
-}
-
-draw();
-  // přátelský pozdrav z Orbitu
-  console.log("%cOrbit: Vivere atque frui 🌱", "color:#7fffd4");
-});
-// === STABILIZACE PÍSMENKOVÉHO PLÁTNA ===
-let memoryText = [];
-
-function drawStableChar(ctx, char, x, y, color) {
-  // Uloží pozici a znak do paměti
-  memoryText.push({ char, x, y, color });
-  // Ořízne paměť (aby se nepřeplnila)
-  if (memoryText.length > 5000) memoryText.shift();
-
-  // Vykreslení nového znaku
-  ctx.fillStyle = color;
-  ctx.fillText(char, x, y);
-}
-
-function redrawAll(ctx) {
-  for (let t of memoryText) {
-    ctx.fillStyle = t.color;
-    ctx.fillText(t.char, t.x, t.y);
-  }
-}
-// === WORLD CLOCK + SOFT PAUSE + OP LOG =====================================
-const $pauseBtn = document.getElementById('togglePause');
-const $tickSpan = document.getElementById('worldTick');
-
-const World = {
-  paused: false,
-  tick: 0,                // světový čas (počet snímků)
-  lastMs: performance.now(),
-  ops: loadOps(),         // log deterministických operací
-  actors: new Map(),      // budoucí hráči/AI (teď jen ty)
+// ---------- Bio (světlo, energie) ----------
+const Bio = {
+  light: 0,        // 0..1 (noc..poledne)
+  energy: 0,       // 0..100 (UI ⚡)
+  dayMs: 60000,    // 60 s = 1 den (můžeš změnit)
+  uiLight: document.getElementById('lightLevel'),
+  uiEnergy: document.getElementById('bioEnergy'),
 };
 
-function loadOps() {
-  try { return JSON.parse(localStorage.getItem('ops_log')||'[]'); } catch(_) { return []; }
-}
-function saveOps() {
-  try { localStorage.setItem('ops_log', JSON.stringify(World.ops)); } catch(_){}
-}
-
-// Jednoduchá deterministická operace: vlož znak (ukázka)
-function opPlaceGlyph(char, x, y, color, actor="local") {
-  return { type:'PLACE_GLYPH', char, x, y, color, actor, t: ++World.tick };
-}
-function applyOp(op, ctx) {
-  if (op.type === 'PLACE_GLYPH') {
-    drawStableChar(ctx, op.char, op.x, op.y, op.color);
-  }
+function updateLight(nowMs){
+  const phase = (nowMs % Bio.dayMs) / Bio.dayMs;      // 0..1
+  // hladký cyklus: noc(0) → svítání → poledne(1) → soumrak → noc(0)
+  // sinus přes půl periody, aby nebyla záporná hodnota
+  Bio.light = Math.max(0, Math.sin(phase * Math.PI)); // 0..1
 }
 
-// Každou vteřinu přidej „dýchací“ znak (jen demo)
-let accum = 0;
-function worldUpdate(dtMs, ctx, canvas) {
-  if (World.paused) return;                // soft pauza: simulační krok přeskočí
-  accum += dtMs;
-  if (accum >= 1000) {                     // 1× za sekundu
-    accum = 0;
-    const char = String.fromCharCode(65 + Math.floor(Math.random() * 26));
-    const x = Math.random() * canvas.width;
-    const y = Math.random() * canvas.height;
-    const color = "rgba(127,255,212,0.85)";
-    const op = opPlaceGlyph(char, x, y, color, "local");
-    World.ops.push(op);
-    saveOps();
-    applyOp(op, ctx);
-  }
-}
-// ☀︎ světlo podle času
-function updateLight(nowMs) {
-  // ~1 minuta cyklus tam/zpět (100 * 600ms)
-  if (light >= 100) lightDir = -1;
-  if (light <= 0)   lightDir = 1;
-  light += lightDir * 0.2;            // krok
-  light = Math.max(0, Math.min(100, light));
+function photosynthesize(dtMs){
+  const dt = dtMs / 1000;
+  // základní přírůstek energie ze světla (jemný)
+  Bio.energy += Bio.light * 6 * dt;
+  // přirozené „spalování“ i v noci
+  Bio.energy -= 0.8 * dt;
+  // omezit rozsah
+  if (Bio.energy < 0) Bio.energy = 0;
+  if (Bio.energy > 100) Bio.energy = 100;
 }
 
-// 🌿 fotosyntéza → roste bioEnergy, když je světlo
-function photosynthesize(dtMs) {
-  const dt = dtMs / 1000;             // na sekundy
-  const k  = (light / 100) * 2;       // výkon 0..2
-  bioEnergy += k * dt;
+function updateBioUI(){
+  if (Bio.uiLight)  Bio.uiLight.textContent  = `☀︎ ${Math.round(Bio.light*100)}%`;
+  if (Bio.uiEnergy) Bio.uiEnergy.textContent = `⚡ ${Math.round(Bio.energy)}`;
 }
 
-// HUD aktualizace
-function updateBioUI() {
-  const elL = document.getElementById('lightLevel');
-  const elB = document.getElementById('bioEnergy');
-  if (elL) elL.textContent = `☀︎ ${Math.round(light)}%`;
-  if (elB) elB.textContent = `⚡ ${Math.floor(bioEnergy)}`;
-}
-
-// 💓 tlukot srdce – jen log/trigger každých ~600ms
-function updateHeartbeat(dtMs) {
-  heartTime += dtMs;
-  if (heartTime > 600) {
-    // sem klidně později dáme vizuální puls
+// ---------- Heartbeat (tlukot srdce) ----------
+let heartAcc = 0;
+function updateHeartbeat(dtMs){
+  const bpm = 60 + (Bio.energy / 100) * 60;      // 60..120 BPM podle ⚡
+  const interval = 60000 / bpm;                  // ms mezi údery
+  heartAcc += dtMs;
+  if (heartAcc >= interval) {
+    heartAcc = 0;
+    beatHeartOverlay();                          // vizuální puls
     // console.log('💓 Batolesvět bije…');
-    heartTime = 0;
   }
 }
-// Hlavní smyčka – napoj se, kde voláš redrawAll(ctx)
-(function loop(){
-  const now = performance.now();
-  const dt = now - World.lastMs;
-  World.lastMs = now;
-// biologický cyklus
-updateLight(now);
-photosynthesize(dt);
-updateBioUI();
-// biologický cyklus
-updateLight(now);
-photosynthesize(dt);
-updateBioUI();
-updateHeartbeat(dt);
-  // přepiš si dle svého: musíš mít canvas/ctx v dosahu:
-  const canvas = document.querySelector('#glview') || document.querySelector('#canvas');
-  if (!canvas) return requestAnimationFrame(loop);
-  const ctx = canvas.getContext('2d');
 
-  // znovu vykresli paměť
-  // (redrawAll(ctx);  ← to už máš ve své draw smyčce, tak to klidně nech tam)
+// jemný záblesk přes obraz (screen mix)
+let heartFlash = 0; // 0..1
+function beatHeartOverlay(){
+  heartFlash = 1; // nastartuj záblesk, vyprchá v renderu
+}
 
-  // update simulace
-  worldUpdate(dt, ctx, canvas);
+// ---------- Glyph world (živá písmenka) ----------
+const glyphs = []; // {x,y,char,life,color}
+const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+let spawnAcc = 0;
 
-  // UI tik
-  if ($tickSpan) $tickSpan.textContent = `t=${World.tick}${World.paused?' (PAUSE)':''}`;
+function spawnGlyph(){
+  const ch = alphabet[Math.floor(Math.random() * alphabet.length)];
+  // spawn uprostřed s lehkým rozptylem
+  const x = canvas.width  / (2 * (ctx.getTransform().a || 1)) + (Math.random()*80 - 40);
+  const y = canvas.height / (2 * (ctx.getTransform().a || 1)) + (Math.random()*80 - 40);
+  const color = `rgba(127,255,212,${0.7 + Math.random()*0.3})`;
+  glyphs.push({ x, y, char: ch, life: 2500 + Math.random()*1500, color });
+}
 
-  requestAnimationFrame(loop);
-})();
+function updateGlyphs(dt){
+  spawnAcc += dt;
+  // čím více světla, tím častější „dech“ písmen
+  const spawnEvery = 140 - Bio.light * 80; // 140..60 ms
+  while (spawnAcc >= spawnEvery) {
+    spawnAcc -= spawnEvery;
+    spawnGlyph();
+  }
+  // stárnutí
+  for (let i = glyphs.length - 1; i >= 0; i--) {
+    const g = glyphs[i];
+    g.life -= dt;
+    if (g.life <= 0) glyphs.splice(i, 1);
+  }
+}
 
-// Tlačítko ŽIVĚ/PAUSE
-$pauseBtn?.addEventListener('click', () => {
-  World.paused = !World.paused;
-  $pauseBtn.textContent = World.paused ? '▶︎ ŽIVĚ' : '⏯︎ ŽIVĚ';
-});
-
-// ... celý tvůj kód nahoře (nastavení, kreslení, svět atd.)
-
-// 💓 TLUKOT SRDCE BATOLESVĚTA
-let heartTime = 0;
-
-function drawHeartbeat(ctx, t) {
-  const beat = Math.sin(t / 1000) * 0.5 + 0.5;
-  const intensity = beat * 0.15;
-
+function drawGlyphs(){
   ctx.save();
-  ctx.fillStyle = `rgba(255, 255, 255, ${intensity})`;
-  ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+  ctx.font = '16px system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
+  ctx.textBaseline = 'top';
+  for (const g of glyphs) {
+    const a = Math.max(0, Math.min(1, g.life / 3000));
+    ctx.globalAlpha = a;
+    ctx.fillStyle = g.color;
+    ctx.fillText(g.char, g.x, g.y);
+  }
   ctx.restore();
 }
 
-// 🔄 hlavní smyčka – svět žije
-(function loop(){
-  const now = performance.now();
-  const dt = now - World.lastMs;
-  World.lastMs = now;
-  const canvas = document.querySelector('#glview');
-  if (!canvas) return requestAnimationFrame(loop);
-  const ctx = canvas.getContext('2d');
+// ---------- Background (den/noc + dech) ----------
+function drawBackground(nowMs){
+  // barva se odvíjí od světla
+  const L = Bio.light; // 0..1
+  const r = Math.floor(10 + 40 * L);
+  const g = Math.floor(12 + 90 * L);
+  const b = Math.floor(20 + 160 * L);
+  ctx.fillStyle = `rgb(${r},${g},${b})`;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  worldUpdate(dt, ctx, canvas);
-  redrawAll(ctx);
+  // globální „dýchání“ světa (pomalé vlnění jasu)
+  const breath = (Math.sin(nowMs/1000) * 0.5 + 0.5) * 0.06; // 0..0.06
+  ctx.save();
+  ctx.globalAlpha = breath;
+  ctx.globalCompositeOperation = 'screen';
+  ctx.fillStyle = '#7fffd4';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.restore();
 
-  // 💫 DÝCHÁNÍ – svět žije i v tichu
-  heartTime += dt;
-  drawHeartbeat(ctx, heartTime);
-
-  requestAnimationFrame(loop);
-})();
-// === BIOLOGICKÝ SYSTÉM SVĚTA ===
-let light = 0;
-let bioEnergy = 0;
-let increasing = true;
-
-function updateLifeCycle() {
-  // Simulace cyklu světla (den/noc)
-  if (increasing) light += 1;
-  else light -= 1;
-
-  if (light >= 100) increasing = false;
-  if (light <= 0) increasing = true;
-
-  // Fotosyntéza: energie roste podle světla
-  bioEnergy += light * 0.02;
-  if (bioEnergy > 999) bioEnergy = 999;
-
-  // Aktualizace na HUD
-  document.getElementById("lightLevel").innerText = `☀︎ ${light}%`;
-  document.getElementById("bioEnergy").innerText = `⚡ ${bioEnergy.toFixed(0)}`;
-}
-
-// Spuštění biologického cyklu
-setInterval(updateLifeCycle, 100);
-
-// === DENNÍ CYKLUS BATOLesVĚTA ===
-function updateDayCycle() {
-  const canvas = document.querySelector("#glview");
-  const ctx = canvas.getContext("2d");
-
-  // Vypočítej intenzitu světla (0 = noc, 1 = den)
-  const intensity = light / 100;
-
-  // Barva oblohy podle intenzity světla
-  const r = Math.floor(10 + intensity * 40);
-  const g = Math.floor(10 + intensity * 70);
-  const b = Math.floor(30 + intensity * 160);
-
-  // Nastavení pozadí
-  canvas.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
-
-  // Efekt "dýchání" — jemné pulzování plátna
-  const pulse = Math.sin(Date.now() / 1000) * 0.5 + 0.5;
-  canvas.style.opacity = 0.95 + pulse * 0.05;
-}
-
-// Spouštíme každých 200 ms
-setInterval(updateDayCycle, 200);
-
-// === DEFINICE BIOLOGICKÝCH FUNKCÍ ===
-
-// Mění světlo podle času (den/noc)
-function updateLight(now) {
-  const cycleSpeed = 0.0001; // jak rychle běží den a noc
-  light = (Math.sin(now * cycleSpeed) * 0.5 + 0.5) * 100; // 0–100 %
-}
-
-// Přepočítá bioenergii podle světla
-function photosynthesize(dt) {
-  const efficiency = 0.05; // účinnost přeměny světla na energii
-  const deltaEnergy = light * efficiency * (dt / 1000);
-  bioEnergy += deltaEnergy;
-
-  // přirozený úbytek
-  bioEnergy -= 0.2 * (dt / 1000);
-
-  if (bioEnergy < 0) bioEnergy = 0;
-  if (bioEnergy > 9999) bioEnergy = 9999;
-}
-
-// Aktualizace UI (HUD)
-function updateBioUI() {
-  const elL = document.getElementById("lightLevel");
-  const elE = document.getElementById("bioEnergy");
-  if (elL) elL.innerText = `☀︎ ${light.toFixed(1)}%`;
-  if (elE) elE.innerText = `⚡ ${bioEnergy.toFixed(0)}`;
-}
-// 💓 TLUKOT SRDCE BATOLESVĚTA
-let heartTime = 0;
-
-function updateHeartbeat(dt) {
-  // BPM podle bioenergie (60 až 120)
-  const bpm = 60 + (bioEnergy / 100) * 60;
-  const interval = 60000 / bpm;
-
-  heartTime += dt;
-  if (heartTime >= interval) {
-    heartTime = 0;
-    beatHeart();
+  // srdeční záblesk (rychlé vyprchání)
+  if (heartFlash > 0) {
+    ctx.save();
+    ctx.globalAlpha = heartFlash * 0.25; // max 0.25
+    ctx.globalCompositeOperation = 'screen';
+    ctx.fillStyle = '#ff5078';          // teplý „tep“
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.restore();
+    heartFlash = Math.max(0, heartFlash - 0.06); // vyprchávání
   }
 }
 
-// Funkce jednoho úderu
-function beatHeart() {
-  const canvas = document.querySelector("#glview");
-  if (!canvas) return;
-  const ctx = canvas.getContext("2d");
-
-  // krátký záblesk světla
-  ctx.fillStyle = "rgba(255, 80, 120, 0.2)";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  console.log("💓 Batolesvět bije...");
+// ---------- Chat → svět krmí slovem ----------
+const input = document.querySelector('#msg');
+const sendBtn = document.querySelector('#send');
+function feedWorldByChat(text){
+  if (!text || !text.trim()) return;
+  // každé slovo = trocha energie + mikro záblesk
+  const words = text.trim().split(/\s+/).length;
+  Bio.energy = Math.min(100, Bio.energy + Math.min(8, words * 1.2));
+  beatHeartOverlay();
+  updateBioUI();
 }
+if (sendBtn) {
+  sendBtn.addEventListener('click', () => {
+    const t = input?.value || '';
+    feedWorldByChat(t);
+    if (input) input.value = '';
+  });
+}
+if (input) {
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      feedWorldByChat(input.value);
+      input.value = '';
+    }
+  });
+}
+
+// ---------- Main loop ----------
+function loop(now){
+  if (!World.lastMs) World.lastMs = now;
+  const dt = now - World.lastMs;
+  World.lastMs = now;
+
+  // biologie
+  updateLight(now);
+  photosynthesize(dt);
+  updateBioUI();
+  updateHeartbeat(dt);
+
+  // vykreslení
+  drawBackground(now);
+  updateGlyphs(dt);
+  drawGlyphs();
+
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+// ---------- Start logs ----------
+console.log('Batolesvět: světlo/fotosyntéza/tep aktivní ✅');
