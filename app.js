@@ -9,6 +9,7 @@ import { Map6x6 } from './src/map3d.js';
 import { Orbit } from './src/orbit.js';
 import { GlyphAtlas } from './src/glyph_atlas.js';
 import { GlyphText } from './src/glyph_text.js';
+import { OrbitAssistant } from './orbit_assistant.js';
 
 async function boot(){
   const canvas=document.getElementById('canvas');
@@ -33,15 +34,11 @@ async function boot(){
   // Orbit ring in center
   const orbit=new Orbit(glview);
   orbit.setCenterPx(glview.canvas.width/2, glview.canvas.height/2);
-// NAČTENÍ PAMĚTI ORBITU (poslední pozice)
-let memory = [];
-try { memory = JSON.parse(localStorage.getItem('orbit_memory') || '[]'); } catch(e){}
-if (memory.length) {
-  const last = memory[memory.length - 1];
-  const px = ( (last.x*0.5 + 0.5) * glview.canvas.width );
-  const py = ( (last.y*-0.5 + 0.5) * glview.canvas.height );
-  orbit.setCenterPx(px, py);
-}
+
+  // Assistant
+  const OA = new OrbitAssistant(bus, glview, matter, orbit);
+  OA.say('Vidím tě, Batole. Dýchej se mnou. Tvoříme.');
+
   // Glyph rectangles for bricks
   const atlas=new GlyphAtlas(glview.gl,{ size:512, cell:32, font:'20px monospace' });
   const gtext=new GlyphText(glview, atlas);
@@ -67,7 +64,7 @@ if (memory.length) {
     return inst;
   }
 
-  // Input
+  // Input (impuls + assistant follow)
   const toWorld=(clientX, clientY)=>{
     const rect=canvas.getBoundingClientRect();
     const x=((clientX-rect.left)/rect.width)*2-1;
@@ -75,22 +72,39 @@ if (memory.length) {
     const px=((clientX-rect.left)/rect.width)*glview.canvas.width;
     const py=((clientY-rect.top)/rect.height)*glview.canvas.height;
     orbit.setCenterPx(px,py);
-    return {x,y};
+    return {x,y, px,py};
   };
   const emitImpulse=(e)=>{
     const pt=('touches' in e && e.touches?.length) ? toWorld(e.touches[0].clientX, e.touches[0].clientY) : toWorld(e.clientX, e.clientY);
-    bus.emit('impulse',{pos:pt});
+    bus.emit('impulse',{pos:{x:pt.x,y:pt.y}});
+    OA.onImpulse({x:pt.x,y:pt.y});
+    if(window._followMode){ OA.followPointer(pt.px, pt.py); }
     e.preventDefault();
-    // ULOŽENÍ PAMĚTI ORBITU (posledních 20 ťuků)
-try {
-  const mem = JSON.parse(localStorage.getItem('orbit_memory') || '[]');
-  mem.push({ t: Date.now(), x: pt.x, y: pt.y });
-  while (mem.length > 20) mem.shift();
-  localStorage.setItem('orbit_memory', JSON.stringify(mem));
-} catch(e){ /* ignore */ }
   };
   canvas.addEventListener('pointerdown', emitImpulse);
   canvas.addEventListener('touchstart', emitImpulse, {passive:false});
+
+  // Command bar
+  const input = document.getElementById('cmd');
+  const sendBtn = document.getElementById('send');
+  const submit = ()=>{
+    const raw = input.value || '';
+    input.value='';
+    const res = OA.handleCommand(raw);
+    if(res === 'follow'){ window._followMode = true; }
+  };
+  sendBtn.addEventListener('click', submit);
+  input.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ submit(); }});
+
+  // Load memory (center position) if exists
+  try{
+    const mem = JSON.parse(localStorage.getItem('orbit_memory') || '{}');
+    if(mem && mem.lastCenter){
+      const px=((mem.lastCenter.x*0.5 + 0.5) * glview.canvas.width);
+      const py=((mem.lastCenter.y*-0.5 + 0.5) * glview.canvas.height);
+      orbit.setCenterPx(px, py);
+    }
+  }catch(e){}
 
   // Loop
   let last=performance.now();
