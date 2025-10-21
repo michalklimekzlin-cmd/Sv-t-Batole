@@ -303,7 +303,24 @@ function loop(now) {
   spawnWorldPair();
   drawPairs(ctx);
 
-  // 🧍‍♂️ AVATARY
+// 💚 BIOLOGICKÝ CYKLUS
+updateLight(now);
+photosynthesize(dt);
+updateBioUI();
+updateHeartbeat(dt);
+
+// ♻️ RECYKLACE A MÍZY
+passiveScrap(now);     // svět generuje šrot
+recyclePressure();     // přetlak → recyklace starých párů
+updateMiza(dt);        // Mízy hledají šrot a mění ho na ⚡ energii
+
+// 🌍 ŽIVOT SVĚTA
+spawnWorldPair();      // svět tvoří nové dvojice
+drawPairs(ctx);        // vykreslí hosty a parťáky
+drawScrap(ctx);        // vykreslí šrot (#)
+drawMiza(ctx);         // vykreslí Mízy (*)
+
+    // 🧍‍♂️ AVATARY
   stepAvatars(dt, keys);
   drawAvatars(ctx);
 
