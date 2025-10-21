@@ -212,3 +212,32 @@ function updateDayCycle() {
 
 // Spouštíme každých 200 ms
 setInterval(updateDayCycle, 200);
+
+// === DEFINICE BIOLOGICKÝCH FUNKCÍ ===
+
+// Mění světlo podle času (den/noc)
+function updateLight(now) {
+  const cycleSpeed = 0.0001; // jak rychle běží den a noc
+  light = (Math.sin(now * cycleSpeed) * 0.5 + 0.5) * 100; // 0–100 %
+}
+
+// Přepočítá bioenergii podle světla
+function photosynthesize(dt) {
+  const efficiency = 0.05; // účinnost přeměny světla na energii
+  const deltaEnergy = light * efficiency * (dt / 1000);
+  bioEnergy += deltaEnergy;
+
+  // přirozený úbytek
+  bioEnergy -= 0.2 * (dt / 1000);
+
+  if (bioEnergy < 0) bioEnergy = 0;
+  if (bioEnergy > 9999) bioEnergy = 9999;
+}
+
+// Aktualizace UI (HUD)
+function updateBioUI() {
+  const elL = document.getElementById("lightLevel");
+  const elE = document.getElementById("bioEnergy");
+  if (elL) elL.innerText = `☀︎ ${light.toFixed(1)}%`;
+  if (elE) elE.innerText = `⚡ ${bioEnergy.toFixed(0)}`;
+}
