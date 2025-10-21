@@ -1,81 +1,41 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="cs">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Batolesvět — Glyph Engine + Orbit</title>
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Batolesvět 🌱</title>
   <style>
-    /* Základ – bez okrajů, žádný scroll, tmavé pozadí */
-    html, body { margin:0; padding:0; height:100%; background:#0b0b0c; overflow:hidden; }
-    :root {
-      --safe-bottom: env(safe-area-inset-bottom, 0px);
-      --safe-top:    env(safe-area-inset-top, 0px);
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: black;
+      color: white;
+      font-family: monospace;
     }
-
-    /* Plátno přes celou obrazovku (1 kus) */
-    #glview, #canvas {
-      position:fixed; inset:0; display:block; width:100vw; height:100vh;
-      touch-action:none; /* gesta nezoomují stránku */
-    }
-
-    /* Horní HUD (Iskra, pauza, tik, titulek) */
     #hud {
-      position:fixed; top:calc(6px + var(--safe-top)); left:6px; z-index:1000;
-      padding:10px 12px; border-radius:12px;
-      color:#e7ecef; font-family:system-ui, -apple-system, Segoe UI, Roboto, sans-serif; font-size:14px;
-      background:rgba(0,0,0,.55); backdrop-filter: blur(6px);
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      font-size: 16px;
+      letter-spacing: 1px;
+      color: #00ffaa;
+      user-select: none;
+      z-index: 10;
     }
-    #hud .row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
-    #hud strong { font-weight:700; }
-    #togglePause {
-      padding:6px 10px; border-radius:8px; border:none; cursor:pointer;
-      background:#7fffd4; color:#0b0b0c; font-weight:700;
-    }
-    #worldTick { opacity:.9; }
-
-    /* Spodní chat lišta */
-    #cmdbox {
-      position:fixed; left:10px; right:10px; bottom:calc(10px + var(--safe-bottom)); z-index:1000;
-      display:flex; gap:8px; align-items:center;
-      background:rgba(0,0,0,.55); backdrop-filter: blur(6px);
-      border-radius:12px; padding:8px;
-    }
-    #cmdbox input {
-      flex:1; min-width:0;
-      padding:10px 12px; border-radius:10px; border:1px solid #3a3f44;
-      background:#141516; color:#eef2f4; font-size:16px;
-    }
-    #cmdbox button {
-      padding:10px 14px; border-radius:10px; border:none; font-weight:700; cursor:pointer;
-      background:#7fffd4; color:#0b0b0c;
+    canvas {
+      display: block;
     }
   </style>
 </head>
 
 <body>
-  <!-- HUD nahoře -->
   <div id="hud">
-    <div class="row">
-      <strong>Iskra:</strong> <strong id="iskra">0</strong>
-      <button id="togglePause">⏯︎ ŽIVĚ</button>
-      <span id="lightLevel">☀︎ 0%</span>
-      <span id="bioEnergy">⚡ 0</span>
-      <span id="worldTick">t=0</span>
-      <strong>Batolesvět — Glyph Engine</strong>
-    </div>
+    <span id="lightLevel">☀︎ 0%</span>
+    <span id="bioEnergy">⚡ 0</span>
   </div>
 
-  <!-- Jediné plátno -->
-  <canvas id="glview"></canvas>
+  <canvas id="canvas"></canvas>
 
-  <!-- Chat dole -->
-  <div id="cmdbox">
-    <input id="msg" data-role="chat-input" placeholder="napiš Orbitovi…" />
-    <button id="send" data-role="chat-send">Poslat</button>
-  </div>
-
-  <!-- App -->
-  <script type="module" src="./app.js?v=bio3"></script>
+  <script type="module" src="./app.js?v=bio4"></script>
 </body>
 </html>
