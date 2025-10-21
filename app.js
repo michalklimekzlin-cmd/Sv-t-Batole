@@ -156,3 +156,27 @@ function drawHeartbeat(ctx, t) {
 
   requestAnimationFrame(loop);
 })();
+// === BIOLOGICKÝ SYSTÉM SVĚTA ===
+let light = 0;
+let bioEnergy = 0;
+let increasing = true;
+
+function updateLifeCycle() {
+  // Simulace cyklu světla (den/noc)
+  if (increasing) light += 1;
+  else light -= 1;
+
+  if (light >= 100) increasing = false;
+  if (light <= 0) increasing = true;
+
+  // Fotosyntéza: energie roste podle světla
+  bioEnergy += light * 0.02;
+  if (bioEnergy > 999) bioEnergy = 999;
+
+  // Aktualizace na HUD
+  document.getElementById("lightLevel").innerText = `☀︎ ${light}%`;
+  document.getElementById("bioEnergy").innerText = `⚡ ${bioEnergy.toFixed(0)}`;
+}
+
+// Spuštění biologického cyklu
+setInterval(updateLifeCycle, 100);
