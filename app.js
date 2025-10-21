@@ -147,7 +147,10 @@ function updateHeartbeat(dtMs) {
   const now = performance.now();
   const dt = now - World.lastMs;
   World.lastMs = now;
-
+// biologický cyklus
+updateLight(now);
+photosynthesize(dt);
+updateBioUI();
 // biologický cyklus
 updateLight(now);
 photosynthesize(dt);
