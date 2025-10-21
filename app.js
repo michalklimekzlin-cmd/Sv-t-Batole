@@ -8,7 +8,22 @@ window.addEventListener("load", () => {
 
   const core = new ImpulseCore(canvas);
   core.start();
+const ctx = document.querySelector("#glcanvas").getContext("2d");
 
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  redrawAll(ctx);
+
+  const char = String.fromCharCode(65 + Math.random() * 25); // náhodné písmeno
+  const x = Math.random() * canvas.width;
+  const y = Math.random() * canvas.height;
+  const color = "rgba(0,255,150,0.8)";
+  drawStableChar(ctx, char, x, y, color);
+
+  requestAnimationFrame(draw);
+}
+
+draw();
   // přátelský pozdrav z Orbitu
   console.log("%cOrbit: Vivere atque frui 🌱", "color:#7fffd4");
 });
