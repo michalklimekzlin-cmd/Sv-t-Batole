@@ -30,6 +30,5 @@ function redrawAll(ctx) {
   for (let t of memoryText) {
     ctx.fillStyle = t.color;
     ctx.fillText(t.char, t.x, t.y);
-  }
-redrawAll(ctx);
+  }redrawAll(ctx);
 }
