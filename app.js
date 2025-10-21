@@ -1,6 +1,13 @@
 // Batolesvět — Level 1: Základní dech
 import { ImpulseCore } from "./src/impulse_core.js";
 
+// --- World state (čas + biologie) ---
+const World = { lastMs: 0 };
+let light = 0;          // 0–100 (den/noc)
+let lightDir = 1;       // 1 = rozednívá se, -1 = stmívá se
+let bioEnergy = 0;      // „živinová“ energie
+let heartTime = 0;      // ms akumulátor pro tlukot
+
 // === BIO STAV SVĚTA ===
 let light = 0;       // 0..100 (%)
 let bioEnergy = 0;   // energie (libovolné jednotky)
