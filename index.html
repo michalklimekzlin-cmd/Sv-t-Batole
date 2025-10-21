@@ -2,52 +2,78 @@
 <html lang="cs">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Batolesvět – v0.36.1 Glyph Engine + Orbit</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Batolesvět — Glyph Engine + Orbit</title>
+
   <style>
-    html,body{margin:0;height:100%;background:#0a0b10;color:#cfd2d6;font-family:system-ui,sans-serif}
-    #hud{position:fixed;top:10px;left:10px;background:rgba(0,0,0,.45);padding:10px 12px;border-radius:8px;font-size:14px;max-width:90vw}
-    #canvas{width:100%;height:100%;display:block;touch-action:none}
-    #cmdbar{position:fixed;bottom:10px;left:10px;right:10px;display:flex;gap:8px}
-    #cmdbar input{flex:1;padding:10px;border-radius:8px;border:1px solid #333;background:#0f1218;color:#dfe6ee}
-    #cmdbar button{padding:10px 14px;border-radius:8px;border:1px solid #333;background:#16202c;color:#cfe7ff}
-    .muted{opacity:.8}
+    /* Základ – bez okrajů, žádný scroll, tmavé pozadí */
+    html, body { margin:0; padding:0; height:100%; background:#0b0b0c; overflow:hidden; }
+    :root {
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --safe-top:    env(safe-area-inset-top, 0px);
+    }
+
+    /* Plátno přes celou obrazovku (1 kus) */
+    #glview, #canvas {
+      position:fixed; inset:0; display:block; width:100vw; height:100vh;
+      touch-action:none; /* gesta nezoomují stránku */
+    }
+
+    /* Horní HUD (Iskra, pauza, tik, titulek) */
+    #hud {
+      position:fixed; top:calc(6px + var(--safe-top)); left:6px; z-index:1000;
+      padding:10px 12px; border-radius:12px;
+      color:#e7ecef; font-family:system-ui, -apple-system, Segoe UI, Roboto, sans-serif; font-size:14px;
+      background:rgba(0,0,0,.55); backdrop-filter: blur(6px);
+    }
+    #hud .row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    #hud strong { font-weight:700; }
+    #togglePause {
+      padding:6px 10px; border-radius:8px; border:none; cursor:pointer;
+      background:#7fffd4; color:#0b0b0c; font-weight:700;
+    }
+    #worldTick { opacity:.9; }
+
+    /* Spodní chat lišta */
+    #cmdbox {
+      position:fixed; left:10px; right:10px; bottom:calc(10px + var(--safe-bottom)); z-index:1000;
+      display:flex; gap:8px; align-items:center;
+      background:rgba(0,0,0,.55); backdrop-filter: blur(6px);
+      border-radius:12px; padding:8px;
+    }
+    #cmdbox input {
+      flex:1; min-width:0;
+      padding:10px 12px; border-radius:10px; border:1px solid #3a3f44;
+      background:#141516; color:#eef2f4; font-size:16px;
+    }
+    #cmdbox button {
+      padding:10px 14px; border-radius:10px; border:none; font-weight:700; cursor:pointer;
+      background:#7fffd4; color:#0b0b0c;
+    }
   </style>
 </head>
-<body>
-  <div id="hud"><button id="togglePause" style="margin-left:8px;">⏯︎ ŽIVĚ</button>
-<span id="worldTick" style="margin-left:8px;opacity:.8;">t=0</span>
-    <strong>Batolesvět – Glyph Engine</strong>
-    <div class="muted">„Vivere atque frui“</div>
-    <div>Iskra: <strong id="iskra">0</strong> • <span id="orbitState">Orbit aktivní</span></div>
-    <div id="intro"></div>
-  </div>
-  <canvas id="glview"></canvas>
 
 <body>
-  <canvas id="glview"></canvas> <!-- nebo id="canvas" -->
-
-  <!-- 🟢 ORBIT CHAT UI -->
-  <div id="hud" style="position:fixed;bottom:10px;left:10px;z-index:1000;
-    background:rgba(0,0,0,0.5);padding:10px;border-radius:10px;color:white;font-family:monospace;">
-    <div>Iskra: <span id="iskraCount">0</span></div>
-    <div style="margin-top:5px;">
-      <input id="msg" data-role="chat-input" placeholder="napiš Orbitovi…" 
-             style="width:200px;background:#222;color:#fff;border:1px solid #555;padding:4px;border-radius:4px;">
-      <button id="send" data-role="chat-send" 
-              style="background:#7fffd4;border:none;padding:4px 10px;border-radius:4px;color:#000;font-weight:bold;">
-        Poslat
-      </button>
+  <!-- HUD nahoře -->
+  <div id="hud">
+    <div class="row">
+      <strong>Iskra:</strong> <strong id="iskra">0</strong>
+      <button id="togglePause">⏯︎ ŽIVĚ</button>
+      <span id="worldTick">t=0</span>
+      <strong>Batolesvět — Glyph Engine</strong>
     </div>
   </div>
 
-  <script type="module" src="./app.js?v=038"></script>
-</body>
-  <div id="cmdbar">
-    <input id="cmd" placeholder="Napiš Orbitovi: např. 'řekni Ahoj', 'postav čtverec', 'následuj mě'…" />
-    <button id="send">Poslat</button>
+  <!-- Jediné plátno -->
+  <canvas id="glview"></canvas>
+
+  <!-- Chat dole -->
+  <div id="cmdbox">
+    <input id="msg" data-role="chat-input" placeholder="napiš Orbitovi…" />
+    <button id="send" data-role="chat-send">Poslat</button>
   </div>
 
-  <script type="module" src="./app.js?v=0361"></script>
+  <!-- App -->
+  <script type="module" src="./app.js?v=042"></script>
 </body>
 </html>
