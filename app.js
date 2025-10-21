@@ -33,7 +33,15 @@ async function boot(){
   // Orbit ring in center
   const orbit=new Orbit(glview);
   orbit.setCenterPx(glview.canvas.width/2, glview.canvas.height/2);
-
+// NAČTENÍ PAMĚTI ORBITU (poslední pozice)
+let memory = [];
+try { memory = JSON.parse(localStorage.getItem('orbit_memory') || '[]'); } catch(e){}
+if (memory.length) {
+  const last = memory[memory.length - 1];
+  const px = ( (last.x*0.5 + 0.5) * glview.canvas.width );
+  const py = ( (last.y*-0.5 + 0.5) * glview.canvas.height );
+  orbit.setCenterPx(px, py);
+}
   // Glyph rectangles for bricks
   const atlas=new GlyphAtlas(glview.gl,{ size:512, cell:32, font:'20px monospace' });
   const gtext=new GlyphText(glview, atlas);
