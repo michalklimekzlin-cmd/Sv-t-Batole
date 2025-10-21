@@ -100,6 +100,10 @@ function worldUpdate(dtMs, ctx, canvas) {
   const dt = now - World.lastMs;
   World.lastMs = now;
 
+// biologický cyklus
+updateLight(now);
+photosynthesize(dt);
+updateBioUI();
   // přepiš si dle svého: musíš mít canvas/ctx v dosahu:
   const canvas = document.querySelector('#glview') || document.querySelector('#canvas');
   if (!canvas) return requestAnimationFrame(loop);
