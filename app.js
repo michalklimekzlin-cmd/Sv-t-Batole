@@ -47,3 +47,78 @@ function redrawAll(ctx) {
     ctx.fillText(t.char, t.x, t.y);
   }
 }
+// === WORLD CLOCK + SOFT PAUSE + OP LOG =====================================
+const $pauseBtn = document.getElementById('togglePause');
+const $tickSpan = document.getElementById('worldTick');
+
+const World = {
+  paused: false,
+  tick: 0,                // světový čas (počet snímků)
+  lastMs: performance.now(),
+  ops: loadOps(),         // log deterministických operací
+  actors: new Map(),      // budoucí hráči/AI (teď jen ty)
+};
+
+function loadOps() {
+  try { return JSON.parse(localStorage.getItem('ops_log')||'[]'); } catch(_) { return []; }
+}
+function saveOps() {
+  try { localStorage.setItem('ops_log', JSON.stringify(World.ops)); } catch(_){}
+}
+
+// Jednoduchá deterministická operace: vlož znak (ukázka)
+function opPlaceGlyph(char, x, y, color, actor="local") {
+  return { type:'PLACE_GLYPH', char, x, y, color, actor, t: ++World.tick };
+}
+function applyOp(op, ctx) {
+  if (op.type === 'PLACE_GLYPH') {
+    drawStableChar(ctx, op.char, op.x, op.y, op.color);
+  }
+}
+
+// Každou vteřinu přidej „dýchací“ znak (jen demo)
+let accum = 0;
+function worldUpdate(dtMs, ctx, canvas) {
+  if (World.paused) return;                // soft pauza: simulační krok přeskočí
+  accum += dtMs;
+  if (accum >= 1000) {                     // 1× za sekundu
+    accum = 0;
+    const char = String.fromCharCode(65 + Math.floor(Math.random() * 26));
+    const x = Math.random() * canvas.width;
+    const y = Math.random() * canvas.height;
+    const color = "rgba(127,255,212,0.85)";
+    const op = opPlaceGlyph(char, x, y, color, "local");
+    World.ops.push(op);
+    saveOps();
+    applyOp(op, ctx);
+  }
+}
+
+// Hlavní smyčka – napoj se, kde voláš redrawAll(ctx)
+(function loop(){
+  const now = performance.now();
+  const dt = now - World.lastMs;
+  World.lastMs = now;
+
+  // přepiš si dle svého: musíš mít canvas/ctx v dosahu:
+  const canvas = document.querySelector('#glview') || document.querySelector('#canvas');
+  if (!canvas) return requestAnimationFrame(loop);
+  const ctx = canvas.getContext('2d');
+
+  // znovu vykresli paměť
+  // (redrawAll(ctx);  ← to už máš ve své draw smyčce, tak to klidně nech tam)
+
+  // update simulace
+  worldUpdate(dt, ctx, canvas);
+
+  // UI tik
+  if ($tickSpan) $tickSpan.textContent = `t=${World.tick}${World.paused?' (PAUSE)':''}`;
+
+  requestAnimationFrame(loop);
+})();
+
+// Tlačítko ŽIVĚ/PAUSE
+$pauseBtn?.addEventListener('click', () => {
+  World.paused = !World.paused;
+  $pauseBtn.textContent = World.paused ? '▶︎ ŽIVĚ' : '⏯︎ ŽIVĚ';
+});
