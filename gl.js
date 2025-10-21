@@ -5,8 +5,9 @@ export class GLView{
     if(!gl) throw new Error('WebGL2 not supported');
     this.gl = gl;
     this.resize();
-    // clear color
     gl.clearColor(0.04,0.05,0.08,1);
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
   }
   resize(){
     const dpr = Math.min(2, window.devicePixelRatio || 1);
@@ -17,12 +18,7 @@ export class GLView{
       this.gl.viewport(0,0,w,h);
     }
   }
-  begin(){
-    const gl = this.gl;
-    gl.enable(gl.BLEND);
-    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-  }
+  begin(){ this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT); }
   end(){}
   createProgram(vsSrc, fsSrc){
     const gl = this.gl;
@@ -31,9 +27,7 @@ export class GLView{
     if(!gl.getShaderParameter(vs, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(vs));
     const fs = gl.createShader(gl.FRAGMENT_SHADER);
     gl.shaderSource(fs, fsSrc); gl.compileShader(fs);
-    if(!gl.getShaderParameter(fs, gl.COMPLETE_STATUS) && !gl.getShaderParameter(fs, gl.COMPILE_STATUS)) {
-      if(!gl.getShaderParameter(fs, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(fs));
-    }
+    if(!gl.getShaderParameter(fs, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(fs));
     const prog = gl.createProgram();
     gl.attachShader(prog, vs); gl.attachShader(prog, fs);
     gl.linkProgram(prog);
