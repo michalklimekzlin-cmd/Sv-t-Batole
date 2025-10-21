@@ -242,3 +242,30 @@ function updateBioUI() {
   if (elL) elL.innerText = `☀︎ ${light.toFixed(1)}%`;
   if (elE) elE.innerText = `⚡ ${bioEnergy.toFixed(0)}`;
 }
+// 💓 TLUKOT SRDCE BATOLESVĚTA
+let heartTime = 0;
+
+function updateHeartbeat(dt) {
+  // BPM podle bioenergie (60 až 120)
+  const bpm = 60 + (bioEnergy / 100) * 60;
+  const interval = 60000 / bpm;
+
+  heartTime += dt;
+  if (heartTime >= interval) {
+    heartTime = 0;
+    beatHeart();
+  }
+}
+
+// Funkce jednoho úderu
+function beatHeart() {
+  const canvas = document.querySelector("#glview");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+
+  // krátký záblesk světla
+  ctx.fillStyle = "rgba(255, 80, 120, 0.2)";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  console.log("💓 Batolesvět bije...");
+}
