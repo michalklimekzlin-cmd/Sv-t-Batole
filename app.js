@@ -1,23 +1,38 @@
+// 🌱 Batolesvět v0.4 — Michal & Kovošrot
 import { VAF } from './vaf.js';
 import { Flow } from './flow.js';
 import { VafiLayer } from './vafi.js';
-// 🌱 Batolesvět v0.4 — Michal & Kovošrot build
 
 console.log("✨ Batolesvět se probouzí...");
-// 🌐 Spuštění života světa
-VAF.start();
-VAF.attachSensors();
-Flow.init();
-VafiLayer.init();
+
+// ===========================
+// 🌍 Inicializace života světa
+// ===========================
+
+// Plátno hlavního světa
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
-function resizeMain(){
+// Funkce pro přizpůsobení rozlišení
+function resizeMain() {
   canvas.style.width = '100vw';
   canvas.style.height = '100vh';
-  canvas.width  = Math.floor(window.innerWidth  * devicePixelRatio);
+  canvas.width = Math.floor(window.innerWidth * devicePixelRatio);
   canvas.height = Math.floor(window.innerHeight * devicePixelRatio);
-  ctx.setTransform(1,0,0,1,0,0);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.scale(devicePixelRatio, devicePixelRatio);
+}
+window.addEventListener('resize', resizeMain);
+resizeMain();
+
+// ===========================
+// ⚡ Spuštění životního cyklu
+// ===========================
+
+VAF.start();          // hlavní puls světa
+VAF.attachSensors();  // reaguje na dotyk / světlo
+Flow.init();          // živá energie proudění
+VafiLayer.init();     // Duo Vafi (Michal + Kovošrot)
   ctx.scale(devicePixelRatio, devicePixelRatio);
 }
 window.addEventListener('resize', resizeMain);
