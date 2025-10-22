@@ -1,54 +1,28 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="cs">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Batolesvět 🌱</title>
-  <style>
-    body {
-      margin: 0;
-      overflow: hidden;
-      background: black;
-      color: white;
-      font-family: monospace;
-    }
-    #hud {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      font-size: 16px;
-      letter-spacing: 1px;
-      color: #00ffaa;
-      user-select: none;
-      z-index: 10;
-    }
-    canvas {
-      display: block;
-    }
-  </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Batolesvět — Vivere atque frui</title>
+  <link rel="stylesheet" href="./style.css">
 </head>
-
 <body>
-  <!-- ✨ Aura zdroje života (Vivere atque frui) -->
-<div class="vaf-halo" aria-hidden="true">
-  <div class="vaf-glow"></div>
-  <span class="vaf-label">Vivere atque frui</span>
-</div>
-  <div id="hud">
-    <span id="lightLevel">☀︎ 0%</span>
-    <span id="bioEnergy">⚡ 0</span>
+
+  <!-- ✨ Aura zdroje života -->
+  <div class="vaf-halo" aria-hidden="true">
+    <div class="vaf-glow"></div>
+    <span class="vaf-label">Vivere atque frui</span>
+    <div id="hud"><span id="lightLevel">✶ 0%</span> <span id="bioEnergy">⚡ 0</span></div>
   </div>
 
+  <!-- Plátna (spodní = svět, horní = Vafi) -->
   <canvas id="canvas"></canvas>
-<canvas id="canvasVafi"></canvas>
+  <canvas id="canvasVafi"></canvas>
 
-    <!-- Jádro a vrstvy světa -->
-<script type="module" src="./vaf.js"></script>
-<script type="module" src="./iskra.js"></script>
-<script type="module" src="./flow.js"></script>
-<script type="module" src="./vafi.js"></script>
-
-<!-- Tvůj hlavní skript musí být jako poslední -->
-<script type="module" src="./app.js"></script>
+  <!-- Pořadí je důležité -->
+  <script type="module" src="./vaf.js"></script>
+  <script type="module" src="./flow.js"></script>
+  <script type="module" src="./vafi.js"></script>
+  <script type="module" src="./app.js?v=10"></script>
 </body>
 </html>
