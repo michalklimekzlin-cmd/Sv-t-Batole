@@ -1,8 +1,7 @@
 // Batolesvět v0.4 — start
-import { VAF } from './vaf.js';
-import { Flow } from './flow.js';
-import { VafiLayer } from './vafi.js';
-
+import { VAF }       from './vaf.js?v=11';
+import { Flow }      from './flow.js?v=11';
+import { VafiLayer } from './vafi.js?v=11';
 console.log("✨ Batolesvět se probouzí...");
 
 // přizpůsobení hlavního plátna (měřítko)
