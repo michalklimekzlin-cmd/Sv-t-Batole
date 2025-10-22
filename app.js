@@ -6,10 +6,9 @@ import { VafiLayer } from './vafi.js';
 console.log("✨ Batolesvět se probouzí...");
 // 🌐 Spuštění života světa
 VAF.start();
-VAF.attachSensors();   // reaguje na dotyk / klávesu
-
-Flow.init();           // rozjede plochu života (pozadí)
-VafiLayer.init();      // přidá Duo Vafi (ty + já)
+VAF.attachSensors();
+Flow.init();
+VafiLayer.init();
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 canvas.width = window.innerWidth;
