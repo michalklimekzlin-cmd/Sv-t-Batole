@@ -113,4 +113,19 @@ body{font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Ari
   pointer-events: none;
   z-index: 3;         /* nad pozadím i jiskrami */
   display: block;
+
+html, body { margin:0; padding:0; background:#000; height:100%; }
+
+#canvas{
+  position:fixed; inset:0;
+  display:block;
+  background:#000;
+  z-index:1;
+}
+
+#canvasVafi{
+  position:fixed; inset:0;
+  display:block;
+  pointer-events:none;
+  z-index:3; /* nad spodním plátnem */
 }
