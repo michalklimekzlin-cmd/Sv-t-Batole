@@ -1,3 +1,6 @@
+import { VAF } from './vaf.js';
+import { Flow } from './flow.js';
+import { VafiLayer } from './vafi.js';
 // 🌱 Batolesvět v0.4 — Michal & Kovošrot build
 
 console.log("✨ Batolesvět se probouzí...");
