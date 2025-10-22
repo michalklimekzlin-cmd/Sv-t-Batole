@@ -1,102 +1,26 @@
-:root {
-  --bg:#0b0b0c; --fg:#e9e9ea; --muted:#a7a8ad; --card:#15161a; --border:#2a2b31;
-  --accent:#7aa2f7; --accent2:#89dceb; --danger:#ef4444;
+/* Základ */
+* { box-sizing: border-box; }
+html, body { margin:0; padding:0; height:100%; background:#000; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+
+#hud { margin-left: 12px; color:#aefcdf; }
+
+/* Canvasy */
+#canvas{
+  position:fixed; inset:0; display:block;
+  background:#000; z-index:1;
 }
-@media (prefers-color-scheme: light){
-  :root{--bg:#fafafa;--fg:#111;--muted:#5b5e66;--card:#fff;--border:#e8e8ef;--accent:#3b82f6;--accent2:#06b6d4;--danger:#ef4444;}
-}
-*{box-sizing:border-box} html,body{margin:0;padding:0}
-body{font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Arial;background:var(--bg);color:var(--fg)}
-.topbar{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg);z-index:10}
-.brand{font-weight:800}
-.stats{display:flex;gap:12px;color:var(--muted);font-size:13px;align-items:center;flex-wrap:wrap}
-.stats .mission{color:var(--fg)}
-.voicebar .chip{padding:6px 10px}
-.wrap{max-width:980px;margin:0 auto;padding:10px}
-#game{width:100%;height:auto;border:1px solid var(--border);border-radius:12px;background:#0d0f14;display:block}
-.controls{margin-top:10px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px}
-.row{display:flex;gap:8px;flex-wrap:wrap}
-.btn{border:1px solid var(--border);background:var(--card);color:var(--fg);padding:10px 12px;border-radius:10px;cursor:pointer;font-weight:700;min-height:40px}
-.btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#0b0b0c}
-.btn.danger{color:var(--danger);border-color:var(--danger)}
-.chip{border:1px solid var(--border);border-radius:999px;background:rgba(127,127,127,.08);padding:8px 12px;cursor:pointer}
-.text{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--fg)}
-.muted{color:var(--muted)} .small{font-size:12px}
-.log{margin-top:10px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px}
-.log h3{margin-top:0}
-.log-item{border-bottom:1px solid var(--border);padding:6px 0;font-size:14px}
-.footer{display:flex;justify-content:space-between;align-items:center;padding:12px;border-top:1px solid var(--border);color:var(--muted)}
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:50}
-.overlay.show{display:flex}
-.overlay-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;max-width:520px;margin:0 14px;text-align:center}
-.overlay-card.wide-card{max-width:900px;text-align:left}
-.overlay-card h1,.overlay-card h2{margin:0 0 8px}
-.overlay-card .wide{width:100%}
-.tip{position:fixed;background:var(--card);border:1px solid var(--border);padding:10px 12px;border-radius:12px;color:var(--fg);z-index:40;display:none}
-#tip1{left:16px;bottom:140px}
-#tip2{left:16px;bottom:140px}
-@media (orientation:portrait){
-  #game{height:60vh}
+#canvasVafi{
+  position:fixed; inset:0; display:block;
+  pointer-events:none; z-index:3;
 }
 
-/* Chat – menší a sbalitelný */
-.chat{
-  position:fixed; right:12px; bottom:68px; z-index:60;
-  width:320px; max-height:42vh; display:none; /* default: skryté */
-}
-.chat.show{ display:block; }
-.chat-log{
-  max-height:32vh; overflow:auto; background:var(--card);
-  border:1px solid var(--border); border-radius:12px;
-  padding:10px 10px 4px; box-shadow:0 10px 30px rgba(0,0,0,.25)
-}
-.msg{display:flex;gap:8px;margin:6px 0}
-.msg .bubble{padding:10px 12px;border-radius:12px;max-width:80%}
-.msg.ai .bubble{background:rgba(137,220,235,.12);border:1px solid var(--border)}
-.msg.me .bubble{background:rgba(122,162,247,.15);border:1px solid var(--border);margin-left:auto}
-.chat-choices{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
-.choice{border:1px solid var(--border);background:var(--card);color:var(--fg);padding:8px 10px;border-radius:999px;cursor:pointer}
-.choice:hover{border-color:var(--accent)}
-
-/* FAB tlačítko pro chat */
-.fab{
-  position:fixed; right:12px; bottom:12px; z-index:61;
-  width:48px; height:48px; border-radius:50%;
-  border:1px solid var(--border); background:var(--card); color:var(--fg);
-  font-size:22px; line-height:48px; text-align:center; cursor:pointer;
-  box-shadow:0 6px 18px rgba(0,0,0,.25);
-}
-
-/* Toast – krátká nenásilná hláška */
-.toast{
-  position:fixed; left:50%; transform:translateX(-50%);
-  bottom:16px; z-index:62; min-width:160px; max-width:70vw;
-  background:var(--card); color:var(--fg);
-  border:1px solid var(--border); border-radius:999px;
-  padding:8px 14px; font-size:14px; display:none;
-}
-.toast.show{ display:block; }
-
-/* Workshop */
-.ws-log{
-  background:var(--bg);
-  border:1px dashed var(--border);
-  border-radius:12px;
-  padding:10px;
-  max-height:40vh; overflow:auto;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 13px; line-height: 1.45;
-  white-space: pre-wrap;
-}
-.ws-log .ok{color:#a7f3d0}
-.ws-log .warn{color:#fde68a}
-.ws-log .err{color:#fecaca}
-/* Aura VAF – jemný puls celého světa */
+/* Aura VAF – jemný puls */
 .vaf-halo{
   position: sticky; top: 0; z-index: 5;
   display:flex; align-items:center; gap:10px;
   padding:10px 16px; margin:0 0 8px 0;
-  background: rgba(20,20,28,0.55); backdrop-filter: blur(6px) saturate(120%);
+  background: rgba(20,20,28,0.55);
+  backdrop-filter: blur(6px) saturate(120%);
   border-bottom: 1px solid #2a2a33;
 }
 .vaf-glow{
@@ -107,25 +31,3 @@ body{font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Ari
   transition: opacity .12s linear;
 }
 .vaf-label{ font-size:12px; color:#a3a3b2; letter-spacing:.06em }
-#canvasVafi{
-  position: fixed;
-  inset: 0;           /* top:0; right:0; bottom:0; left:0; */
-  pointer-events: none;
-  z-index: 3;         /* nad pozadím i jiskrami */
-  display: block;
-
-html, body { margin:0; padding:0; background:#000; height:100%; }
-
-#canvas{
-  position:fixed; inset:0;
-  display:block;
-  background:#000;
-  z-index:1;
-}
-
-#canvasVafi{
-  position:fixed; inset:0;
-  display:block;
-  pointer-events:none;
-  z-index:3; /* nad spodním plátnem */
-}
