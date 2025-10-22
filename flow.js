@@ -1,5 +1,5 @@
 // flow.js — Plocha života (vlny napojené na VAF)
-import { VAF } from './vaf.js';
+import { VAF } from './vaf.js?v=11';
 
 export const Flow = {
   canvas:null, ctx:null, w:0, h:0,
