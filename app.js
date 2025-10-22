@@ -11,9 +11,17 @@ Flow.init();
 VafiLayer.init();
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
 
+function resizeMain(){
+  canvas.style.width = '100vw';
+  canvas.style.height = '100vh';
+  canvas.width  = Math.floor(window.innerWidth  * devicePixelRatio);
+  canvas.height = Math.floor(window.innerHeight * devicePixelRatio);
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.scale(devicePixelRatio, devicePixelRatio);
+}
+window.addEventListener('resize', resizeMain);
+resizeMain();
 // ========================
 // 💡 BIOLOGICKÝ SYSTÉM
 // ========================
