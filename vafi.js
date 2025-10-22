@@ -1,5 +1,5 @@
 // vafi.js — první Vafi (Duo Vafi)
-import { VAF } from './vaf.js';
+import { VAF } from './vaf.js?v=11';
 
 let imprint = 0; // počítadlo otisků (přiblížení)
 
