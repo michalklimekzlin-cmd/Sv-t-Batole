@@ -4,7 +4,12 @@ import { VafiLayer } from './vafi.js';
 // 🌱 Batolesvět v0.4 — Michal & Kovošrot build
 
 console.log("✨ Batolesvět se probouzí...");
+// 🌐 Spuštění života světa
+VAF.start();
+VAF.attachSensors();   // reaguje na dotyk / klávesu
 
+Flow.init();           // rozjede plochu života (pozadí)
+VafiLayer.init();      // přidá Duo Vafi (ty + já)
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 canvas.width = window.innerWidth;
