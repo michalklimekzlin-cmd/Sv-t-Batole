@@ -46,12 +46,12 @@
 
 <!-- Hlas -->
 <script type="module">
-  import { initVoice, say } from './voice.io.js';
+  import { initVoice, say } from './voice.io.js?v=6';
   initVoice();
-  // malý pozdrav po načtení
-  setTimeout(() => say('Jsem vzhůru. Zkus mě ťuknout, nebo promluv. 🌙'), 800);
-</script>
 
+  // malý pozdrav po načtení
+  setTimeout(() => say('Jsem vzhůru. Zkus mě ťuknout, nebo promluv.'), 800);
+</script>
 <!-- Duše a Avatar -->
 <script type="module" src="./vafi.soul.js?v=2"></script>
 <script type="module" src="./avatar.vafi.js?v=2"></script>
