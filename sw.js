@@ -1,12 +1,23 @@
-const CACHE='batolesvet-v1';
-const ASSETS=[
-  './',
-  './index.html','./style.css','./app.js',
-  './manifest.json','./assets/icon-192.png','./assets/icon-512.png'
-];
-self.addEventListener('install',e=>{
-  e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)));
+// sw.js — PWA + notifikace; připravené i na budoucí push
+self.addEventListener('install', ()=>self.skipWaiting());
+self.addEventListener('activate', e=>e.waitUntil(self.clients.claim()));
+
+// lokální zobrazení (budoucí push handler)
+self.addEventListener('push', e=>{
+  const data = e.data ? e.data.json() : { title:'Batolesvět', body:'Zpráva' };
+  e.waitUntil(self.registration.showNotification(data.title, {
+    body: data.body, icon: data.icon || undefined, badge: data.badge || undefined,
+    vibrate: [60,30,60], data: data.data || {}
+  }));
 });
-self.addEventListener('fetch',e=>{
-  e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)));
+
+self.addEventListener('notificationclick', e=>{
+  e.notification.close();
+  e.waitUntil(
+    self.clients.matchAll({ type:'window', includeUncontrolled:true }).then(clients=>{
+      const url = './';
+      for (const c of clients){ if ('focus' in c) return c.focus(); }
+      return self.clients.openWindow(url);
+    })
+  );
 });
