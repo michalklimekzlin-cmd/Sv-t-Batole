@@ -1,93 +1,116 @@
-// avatar.vafi.js — robustní světelný avatar Vafiho
-let vafiSoul = null;
-try {
-  // pokus o import duše (když selže, jedeme s fallbackem)
-  ({ vafiSoul } = await import('./vafi.soul.js'));
-} catch (e) { console.warn('Soul import failed, using fallback mood/energy.'); }
+// avatar.vafi.js — plynulé pohyby, žádné blikání
+import { Soul } from './vafi.soul.js';
 
-const cv = document.getElementById('canvasVafi');
-const ctx = cv.getContext('2d', { alpha: true });
+const TWO_PI = Math.PI * 2;
+const lerp = (a,b,t)=>a+(b-a)*t;
+const clamp = (x,a,b)=>Math.max(a,Math.min(b,x));
 
-function ensureSize(){
-  const dpr = window.devicePixelRatio || 1;
-  const w = Math.max(1, Math.floor(window.innerWidth));
-  const h = Math.max(1, Math.floor(window.innerHeight));
-  // nastav styl + skutečná pixmapa
-  cv.style.width = '100vw';
-  cv.style.height = '100vh';
-  const needW = Math.floor(w*dpr), needH = Math.floor(h*dpr);
-  if (cv.width !== needW || cv.height !== needH){
-    cv.width = needW; cv.height = needH;
-    ctx.setTransform(dpr,0,0,dpr,0,0);
-  }
-}
-addEventListener('resize', ensureSize, {passive:true});
-ensureSize();
+let ctx, W, H, DPR;
+let face = {
+  x: 0.5, y: 0.62, r: 0.12,   // relativně k výšce/šířce
+  glow: 0.0,
+  eyeBlink: 0,
+  nextBlinkAt: 0
+};
+let smooth = { x: 0.5, y: 0.62, r: 0.12, glow: 0.0 };
 
-let t = 0, blinkT = 0, nextBlink = 2 + Math.random()*3;
-
-function getMood(){  // 0..1
-  if (vafiSoul?.mood != null) return Math.max(0, Math.min(1, vafiSoul.mood));
-  const el = document.getElementById('moodPct'); // fallback z HUDu
-  return Math.max(0, Math.min(1, (+el?.textContent || 60)/100));
-}
-function getEnergy(){ // 0..1
-  if (vafiSoul?.energy != null) return Math.max(0, Math.min(1, vafiSoul.energy));
-  const el = document.getElementById('energyVal');
-  return Math.max(0, Math.min(1, (+el?.textContent || 70)/100));
-}
-function isAsleep(){
-  const s = document.getElementById('vafiStatus')?.textContent || '';
-  return /spí/i.test(s);
+function setup(){
+  const cvs = document.getElementById('canvasVafi') || document.getElementById('canvas');
+  ctx = cvs.getContext('2d');
+  DPR = Math.max(1, Math.floor(window.devicePixelRatio || 1));
+  resize();
+  window.addEventListener('resize', resize);
+  scheduleBlink();
 }
 
-function draw(){
-  ensureSize();               // kdyby jiný skript měnil rozměry
-  t += 1/60; blinkT += 1/60;
+function resize(){
+  const cvs = ctx.canvas;
+  W = Math.floor(window.innerWidth);
+  H = Math.floor(window.innerHeight);
+  cvs.style.width = W+'px';
+  cvs.style.height = H+'px';
+  cvs.width  = W*DPR; cvs.height = H*DPR;
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+}
 
-  const w = cv.width/(window.devicePixelRatio||1);
-  const h = cv.height/(window.devicePixelRatio||1);
-  ctx.clearRect(0,0,w,h);
+function scheduleBlink(){
+  face.nextBlinkAt = performance.now() + 1600 + Math.random()*2400;
+}
 
-  const mood   = getMood();
-  const energy = getEnergy();
-  const asleep = isAsleep();
+function moodColor(mood){
+  // 0..1 → fialová → tyrkys → světle zelená
+  const h = lerp(260, 165, mood); // v deg
+  const s = 80;
+  const l = lerp(45, 60, mood);
+  return `hsl(${h}deg ${s}% ${l}%)`;
+}
 
-  const cx = w*0.5, cy = h*0.56;
-  const baseR = Math.min(w,h)*0.18;
-  const r = baseR*(1 + (asleep?0.02:0.05)*Math.sin(t*2)) + energy*12;
+function draw(dt){
+  const S = Soul.state();
 
-  const hue = 210 + (mood-0.5)*120; // modrá→fialová s náladou
+  // cíle z nálady/energie
+  face.glow = clamp(0.25 + S.energy*0.75, 0, 1);
+  face.r = lerp(0.10, 0.14, S.energy);
+  face.y = lerp(0.58, 0.65, 1-S.mood);
+  face.x = lerp(0.35, 0.65, S.flow);
 
-  // záře
-  const g = ctx.createRadialGradient(cx,cy, r*0.2, cx,cy, r*1.4);
-  g.addColorStop(0, `hsla(${hue},90%,70%,${0.92})`);
-  g.addColorStop(1, `hsla(${hue},90%,10%,0)`);
-  ctx.fillStyle = g;
-  ctx.beginPath(); ctx.arc(cx,cy,r*1.4,0,Math.PI*2); ctx.fill();
+  // plynulé přechody
+  const s = 1 - Math.pow(0.001, dt); // frame-rate invariant smoothing
+  smooth.x = lerp(smooth.x, face.x, s);
+  smooth.y = lerp(smooth.y, face.y, s);
+  smooth.r = lerp(smooth.r, face.r, s);
+  smooth.glow = lerp(smooth.glow, face.glow, s);
+
+  ctx.clearRect(0,0,W,H);
+
+  // světélkující aura
+  const cx = W*smooth.x, cy = H*smooth.y, r = Math.min(W,H)*smooth.r;
+  const g = ctx.createRadialGradient(cx, cy, r*0.2, cx, cy, r*2.4);
+  const col = moodColor(S.mood);
+  g.addColorStop(0, col);
+  g.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.globalAlpha = 0.55*smooth.glow;
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx,cy,r*2.2,0,TWO_PI); ctx.fill();
+  ctx.globalAlpha = 1;
 
   // tělo
-  ctx.fillStyle = `hsla(${hue},85%,65%,${0.75 + energy*0.2})`;
-  ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = col;
+  ctx.beginPath(); ctx.arc(cx, cy, r, 0, TWO_PI); ctx.fill();
 
   // oči + mrknutí
-  const eyeR = r*0.12, sep = r*0.55;
-  const doBlink = blinkT > nextBlink;
-  ctx.fillStyle = asleep ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.9)';
-  for (const s of [-1,1]){
-    ctx.beginPath();
-    if (doBlink){
-      ctx.ellipse(cx+s*sep*0.5, cy-eyeR*0.2, eyeR, eyeR*0.2, 0, 0, Math.PI*2);
-    } else {
-      ctx.arc(cx+s*sep*0.5, cy-eyeR*0.2, eyeR, 0, Math.PI*2);
-    }
-    ctx.fill();
+  const eyeR = r*0.11;
+  if (performance.now() >= face.nextBlinkAt){
+    face.eyeBlink = 1; scheduleBlink();
   }
-  if (doBlink){
-    // reset mrknutí
-    if (blinkT > nextBlink + 0.08){ blinkT = 0; nextBlink = 2 + Math.random()*3; }
-  }
+  face.eyeBlink = Math.max(0, face.eyeBlink - dt*3); // rychlé mrknutí
+  const squish = lerp(1, 0.15, face.eyeBlink);
 
-  requestAnimationFrame(draw);
+  ctx.fillStyle = 'rgba(0,0,0,0.6)';
+  // levé
+  ctx.save();
+  ctx.translate(cx - r*0.35, cy - r*0.05);
+  ctx.scale(1, squish);
+  ctx.beginPath(); ctx.arc(0,0,eyeR,0,TWO_PI); ctx.fill();
+  ctx.restore();
+  // pravé
+  ctx.save();
+  ctx.translate(cx + r*0.20, cy - r*0.02);
+  ctx.scale(1, squish);
+  ctx.beginPath(); ctx.arc(0,0,eyeR,0,TWO_PI); ctx.fill();
+  ctx.restore();
 }
-requestAnimationFrame(draw);
+
+let tPrev = 0;
+function loop(t){
+  if (!tPrev) tPrev = t;
+  const dt = Math.min(0.06, (t - tPrev)/1000); // v sekundách
+  tPrev = t;
+
+  Soul.tick(dt);
+  draw(dt);
+  requestAnimationFrame(loop);
+}
+
+export const Avatar = {
+  init(){ setup(); requestAnimationFrame(loop); }
+};
