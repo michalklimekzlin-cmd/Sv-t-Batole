@@ -31,3 +31,6 @@ canvas{display:block;width:100vw;height:50vh}
 
 /* (volitelné) pokud gesta neberou kvůli canvům, dočasně odkomentuj: */
 /* #canvas, #canvasVafi { pointer-events:none; } */
+canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;display:block}
+#canvas{z-index:0}
+#canvasVafi{z-index:3; pointer-events:none}  /* Vafi vždy nad světem */
