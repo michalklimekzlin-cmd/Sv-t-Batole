@@ -39,27 +39,22 @@
   <!-- Stavová hláška (šeptání) -->
   <div id="vafiStatus" aria-live="polite"></div>
 
-  <!-- Pořadí je důležité -->
-  <script type="module" src="./vaf.js?v=11"></script>
-  <script type="module" src="./flow.js?v=11"></script>
-
-  <!-- NOVÉ: Vafi engine -->
-  <!-- NOVÉ: engine -->
-<script type="module" src="./vafi.engine.js?v=4"></script>
-
-<!-- Tvoje vrstvy (ponech) -->
-<script type="module" src="./vafi.js?v=11"></script>
+<!-- Pořadí je důležité -->
 <script type="module" src="./vafi.engine.js?v=5"></script>
-<script type="module" src="./world.fx.js?v=1"></script>    <!-- svět -->
-<script type="module" src="./avatar.vafi.js?v=1"></script> <!-- tělo -->
+
+<!-- Hlas -->
 <script type="module">
   import { initVoice, say } from './voice.io.js';
   initVoice();
   // malý pozdrav po načtení
-  setTimeout(()=>say('Jsem vzhůru. Zkus mě ťuknout, nebo podržet, a já odpovím.'), 800);
-
-<script type="module" src="./vafi.soul.js?v=1"></script>
+  setTimeout(() => say('Jsem vzhůru. Zkus mě ťuknout, nebo promluv. 🌙'), 800);
 </script>
+
+<!-- Duše a Avatar -->
+<script type="module" src="./vafi.soul.js?v=2"></script>
+<script type="module" src="./avatar.vafi.js?v=2"></script>
+
+<!-- Aplikace -->
 <script type="module" src="./app.js?v=14"></script>
 <script type="module" src="./app.js?v=13"></script>
 </body>
