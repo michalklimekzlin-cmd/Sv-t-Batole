@@ -1,27 +1,30 @@
 <!DOCTYPE html>
 <html lang="cs">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Svět Batole</title>
+  <link rel="icon" href="./favicon.ico" />
 </head>
-
 <body>
-  <canvas id="canvas"></canvas>
 
+  <canvas id="core"></canvas>
+
+  <!-- HLAS + PROBUZENÍ -->
   <script type="module">
     import { initVoice, say } from './voice.io.js?v=89';
     initVoice();
     setTimeout(() => say('Jsem vzhůru. Cítím tok světa.'), 800);
   </script>
 
+  <!-- VERZE / CACHE BUST -->
   <script>
-    window.V = (new Date()).toISOString();
+    window.V = (new Date()).toISOString().slice(0, 19).replace(/[-:T]/g, '');
   </script>
 
   <!-- Flow + Paměť -->
-  <script type="module" src="./vivere.flow.js?v=91"></script>
-  <script type="module" src="./vafi.memory.v1.1.js?v=91"></script>
+  <script type="module" src="./vivere.flow.js?v="+window.V></script>
+  <script type="module" src="./vafi.memory.v1.1.js?v="+window.V></script>
 
   <!-- Týmy -->
   <script type="module" src="./team.human.js?v=91"></script>
@@ -42,7 +45,30 @@
 
   <!-- App -->
   <script type="module" src="./mk.core.js?v=91"></script>
-  <script type="module" src="./app.js?v=91"></script>
+  <script type="module" src="./app.js?v="+window.V></script>
   <script type="module" src="./notify.local.js?v=91"></script>
+
+  <!-- TEST OVERLAY – po testu klidně smaž -->
+  <script>
+  (() => {
+    const tag = (ok, label) => `<span style="margin-right:.5rem;opacity:.9">${ok?'🟢':'🔴'} ${label}</span>`;
+    const el = document.createElement('div');
+    el.style.cssText = `
+      position:fixed;left:12px;bottom:12px;padding:.4rem .6rem;border:1px solid #3a5;
+      background:rgba(0,20,20,.6);backdrop-filter:blur(8px) saturate(120%);
+      color:#bff;font:600 12px system-ui;z-index:99999;border-radius:.6rem
+    `;
+    function render(){
+      const stateOk = !!window.StateCore?.get;
+      const soulOk  = !!window.VafiSoul?.get;
+      const dreamOk = !!window.Dreams?.save;
+      const layOk   = !!window.TeamLayout?.mount;
+      el.innerHTML = `${tag(stateOk,'State')} ${tag(soulOk,'Soul')} ${tag(dreamOk,'Dreams')} ${tag(layOk,'Badges')} <span>${new Date().toLocaleTimeString()}</span>`;
+    }
+    render(); setInterval(render, 1000);
+    document.body.appendChild(el);
+  })();
+  </script>
+
 </body>
 </html>
