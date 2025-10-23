@@ -4,7 +4,7 @@ window.__AVATAR_ACTIVE__ = true;
 if (window.__AVATAR_ACTIVE__) { throw new Error('Avatar už běží'); }
 window.__AVATAR_ACTIVE__ = true;
 // avatar.vafi.js — Vafi s dýcháním, mžouráním, spánkem a SNY ✨
-
+import { Head } from './vafi.head.js';
 export async function spawnVafi() {
   const canvas = document.getElementById('canvasVafi');
   if (!canvas) return;
