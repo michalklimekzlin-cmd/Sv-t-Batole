@@ -1,116 +1,131 @@
-// avatar.vafi.js — plynulé pohyby, žádné blikání
-import { Soul } from './vafi.soul.js';
+// avatar.vafi.js  (v3)
+// Jednoduchý avatar „kulička s očima“ napojený na Vafiho stav.
+// Nepadá, i když engine ještě není hotový – čeká, než je canvas k dispozici.
 
-const TWO_PI = Math.PI * 2;
-const lerp = (a,b,t)=>a+(b-a)*t;
-const clamp = (x,a,b)=>Math.max(a,Math.min(b,x));
+(() => {
+  const AVATAR = {
+    ready: false,
+    ctx: null,
+    w: 0, h: 0,
+    // stav
+    x: 0.5,                  // relativně (0..1) přes šířku
+    y: 0.68,                 // relativně (0..1) přes výšku
+    r: 110,                  // poloměr v px (přepočítá se při resize)
+    hue: 190,                // barva (0..360)
+    mood: 0.5,               // 0..1
+    energy: 1,               // 0..1
+    blinkAt: 0,
 
-let ctx, W, H, DPR;
-let face = {
-  x: 0.5, y: 0.62, r: 0.12,   // relativně k výšce/šířce
-  glow: 0.0,
-  eyeBlink: 0,
-  nextBlinkAt: 0
-};
-let smooth = { x: 0.5, y: 0.62, r: 0.12, glow: 0.0 };
+    init() {
+      const cvs = document.getElementById('canvasVafi') || document.getElementById('canvas');
+      if (!cvs) { requestAnimationFrame(AVATAR.init); return; }
 
-function setup(){
-  const cvs = document.getElementById('canvasVafi') || document.getElementById('canvas');
-  ctx = cvs.getContext('2d');
-  DPR = Math.max(1, Math.floor(window.devicePixelRatio || 1));
-  resize();
-  window.addEventListener('resize', resize);
-  scheduleBlink();
-}
+      const ctx = cvs.getContext('2d');
+      AVATAR.ctx = ctx;
+      AVATAR.resize();
+      addEventListener('resize', AVATAR.resize);
 
-function resize(){
-  const cvs = ctx.canvas;
-  W = Math.floor(window.innerWidth);
-  H = Math.floor(window.innerHeight);
-  cvs.style.width = W+'px';
-  cvs.style.height = H+'px';
-  cvs.width  = W*DPR; cvs.height = H*DPR;
-  ctx.setTransform(DPR,0,0,DPR,0,0);
-}
+      // pokus o napojení na VAFI (není-li, jede fallback)
+      if (globalThis.VAFI) {
+        const v = globalThis.VAFI;
+        AVATAR.hue   = 180 + Math.max(-60, Math.min(60, (v.mood - 50) * 1.2));
+        AVATAR.mood  = Math.max(0, Math.min(1, v.mood / 100));
+        AVATAR.energy= Math.max(0, Math.min(1, v.energy / 100));
+      }
 
-function scheduleBlink(){
-  face.nextBlinkAt = performance.now() + 1600 + Math.random()*2400;
-}
+      AVATAR.ready = true;
+      AVATAR.nextBlink();
+      requestAnimationFrame(AVATAR.loop);
+    },
 
-function moodColor(mood){
-  // 0..1 → fialová → tyrkys → světle zelená
-  const h = lerp(260, 165, mood); // v deg
-  const s = 80;
-  const l = lerp(45, 60, mood);
-  return `hsl(${h}deg ${s}% ${l}%)`;
-}
+    resize() {
+      if (!AVATAR.ctx) return;
+      const cvs = AVATAR.ctx.canvas;
+      // plátno velikostí stránky – pokud si ho spravuje engine, nechat být
+      if (!cvs.width || !cvs.height) {
+        cvs.width  = innerWidth  * devicePixelRatio;
+        cvs.height = innerHeight * devicePixelRatio;
+      }
+      AVATAR.w = cvs.width;
+      AVATAR.h = cvs.height;
+      // škálování poloměru podle kratšího rozměru
+      AVATAR.r = Math.max(60, Math.min(200, Math.min(AVATAR.w, AVATAR.h) * 0.08));
+    },
 
-function draw(dt){
-  const S = Soul.state();
+    setMood(pct) {           // 0..100
+      AVATAR.mood = Math.max(0, Math.min(1, pct/100));
+      AVATAR.hue  = 180 + (AVATAR.mood - 0.5) * 180; // modrá → tyrkys → fialová
+    },
 
-  // cíle z nálady/energie
-  face.glow = clamp(0.25 + S.energy*0.75, 0, 1);
-  face.r = lerp(0.10, 0.14, S.energy);
-  face.y = lerp(0.58, 0.65, 1-S.mood);
-  face.x = lerp(0.35, 0.65, S.flow);
+    setEnergy(pct) {         // 0..100
+      AVATAR.energy = Math.max(0, Math.min(1, pct/100));
+    },
 
-  // plynulé přechody
-  const s = 1 - Math.pow(0.001, dt); // frame-rate invariant smoothing
-  smooth.x = lerp(smooth.x, face.x, s);
-  smooth.y = lerp(smooth.y, face.y, s);
-  smooth.r = lerp(smooth.r, face.r, s);
-  smooth.glow = lerp(smooth.glow, face.glow, s);
+    nextBlink() {
+      // mrknutí za 2–6 s
+      AVATAR.blinkAt = performance.now() + 2000 + Math.random()*4000;
+    },
 
-  ctx.clearRect(0,0,W,H);
+    loop(t) {
+      if (!AVATAR.ready) return;
+      AVATAR.draw(t);
+      requestAnimationFrame(AVATAR.loop);
+    },
 
-  // světélkující aura
-  const cx = W*smooth.x, cy = H*smooth.y, r = Math.min(W,H)*smooth.r;
-  const g = ctx.createRadialGradient(cx, cy, r*0.2, cx, cy, r*2.4);
-  const col = moodColor(S.mood);
-  g.addColorStop(0, col);
-  g.addColorStop(1, 'rgba(0,0,0,0)');
-  ctx.globalAlpha = 0.55*smooth.glow;
-  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx,cy,r*2.2,0,TWO_PI); ctx.fill();
-  ctx.globalAlpha = 1;
+    draw(t) {
+      const ctx = AVATAR.ctx;
+      const cvs = ctx.canvas;
 
-  // tělo
-  ctx.fillStyle = col;
-  ctx.beginPath(); ctx.arc(cx, cy, r, 0, TWO_PI); ctx.fill();
+      // částečný průhled – nechává podkladové „linky“ z engine vidět
+      ctx.clearRect(0,0,cvs.width,cvs.height);
 
-  // oči + mrknutí
-  const eyeR = r*0.11;
-  if (performance.now() >= face.nextBlinkAt){
-    face.eyeBlink = 1; scheduleBlink();
-  }
-  face.eyeBlink = Math.max(0, face.eyeBlink - dt*3); // rychlé mrknutí
-  const squish = lerp(1, 0.15, face.eyeBlink);
+      const cx = AVATAR.w * AVATAR.x;
+      const cy = AVATAR.h * AVATAR.y;
 
-  ctx.fillStyle = 'rgba(0,0,0,0.6)';
-  // levé
-  ctx.save();
-  ctx.translate(cx - r*0.35, cy - r*0.05);
-  ctx.scale(1, squish);
-  ctx.beginPath(); ctx.arc(0,0,eyeR,0,TWO_PI); ctx.fill();
-  ctx.restore();
-  // pravé
-  ctx.save();
-  ctx.translate(cx + r*0.20, cy - r*0.02);
-  ctx.scale(1, squish);
-  ctx.beginPath(); ctx.arc(0,0,eyeR,0,TWO_PI); ctx.fill();
-  ctx.restore();
-}
+      const grad = ctx.createRadialGradient(cx, cy, AVATAR.r*0.2, cx, cy, AVATAR.r*1.35);
+      const col = (h, a)=>`hsla(${h}deg, 80%, 60%, ${a})`;
+      grad.addColorStop(0.00, col(AVATAR.hue, 0.95));
+      grad.addColorStop(0.60, col(AVATAR.hue, 0.45));
+      grad.addColorStop(1.00, col(AVATAR.hue, 0.00));
 
-let tPrev = 0;
-function loop(t){
-  if (!tPrev) tPrev = t;
-  const dt = Math.min(0.06, (t - tPrev)/1000); // v sekundách
-  tPrev = t;
+      // tělo
+      ctx.beginPath();
+      ctx.fillStyle = grad;
+      ctx.arc(cx, cy, AVATAR.r, 0, Math.PI*2);
+      ctx.fill();
 
-  Soul.tick(dt);
-  draw(dt);
-  requestAnimationFrame(loop);
-}
+      // oči
+      const blink = t > AVATAR.blinkAt && t < AVATAR.blinkAt + 140; // 140 ms
+      if (t > AVATAR.blinkAt + 140) AVATAR.nextBlink();
 
-export const Avatar = {
-  init(){ setup(); requestAnimationFrame(loop); }
-};
+      const eyeR = blink ? AVATAR.r*0.06 : AVATAR.r*0.12;
+      const eyeDy= blink ? AVATAR.r*0.02 : AVATAR.r*0.04;
+      const eyeDx= AVATAR.r*0.34;
+
+      ctx.fillStyle = 'rgba(0,0,0,0.75)';
+      // levé
+      ctx.beginPath();
+      ctx.ellipse(cx - eyeDx, cy - eyeDy, eyeR, blink? eyeR*0.25 : eyeR, 0, 0, Math.PI*2);
+      ctx.fill();
+      // pravé
+      ctx.beginPath();
+      ctx.ellipse(cx + eyeDx, cy - eyeDy, eyeR, blink? eyeR*0.25 : eyeR, 0, 0, Math.PI*2);
+      ctx.fill();
+
+      // jemná pulzace podle „energie“
+      const pulse = 1 + (AVATAR.energy-0.5)*0.06 * Math.sin(t/450);
+      AVATAR.r *= pulse;      // krátce zvětší / zmenší
+      AVATAR.r /= pulse;
+    }
+  };
+
+  // vystavit jednoduché API pro engine / duši
+  globalThis.Avatar = {
+    init: AVATAR.init,
+    setMood: AVATAR.setMood,
+    setEnergy: AVATAR.setEnergy
+  };
+
+  // auto-start
+  AVATAR.init();
+})();
