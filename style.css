@@ -74,3 +74,11 @@ canvas {
   color: #85b8ff;
   transform: translateY(2px);
 }
+/* Míza badge – drobný doladění hoveru (nepovinné) */
+#mizaBadge { transition: transform .2s ease, opacity .2s ease; }
+#mizaBadge:hover { transform: translateY(-1px); opacity: 1; }
+
+/* Canvas vrstvy – jistota */
+canvas { position: fixed; left:0; top:0; width:100vw; height:100vh; display:block; }
+#canvas { z-index:0; }
+#canvasVafi { z-index:3; pointer-events:none; }
