@@ -21,7 +21,7 @@
   #canvas{z-index:0} #canvasVafi{z-index:1; /* pokud bude brát gesta, dočasně: */ pointer-events:none;}
 </style>
   <title>Vivere atque frui</title>
-  <link rel="stylesheet" href="./styles.css?v=2" />
+  <link rel="stylesheet" href="./styles.css?v=89" />
 </head>
 <body>
 
@@ -43,43 +43,43 @@
 <div id="vafiStatus" aria-live="polite"></div>
 
 <!-- Pořadí je důležité -->
-<script type="module" src="./vafi.engine.js?v=5"></script>
+<script type="module" src="./vafi.engine.js?v=89"></script>
 
 <!-- Hlas -->
 <script type="module">
-  import { initVoice, say } from './voice.io.js?v=6';
+  import { initVoice, say } from './voice.io.js?v=89';
   initVoice();
 
   // malý pozdrav po načtení
   setTimeout(() => say('Jsem vzhůru. Zkus mě ťuknout, nebo promluv.'), 800);
 </script>
 <!-- Duše a Avatar -->
-<script type="module" src="./vafi.soul.js?v=2"></script>
-<script type="module" src="./avatar.vafi.js?v=2"></script>
+<script type="module" src="./vafi.soul.js?v=89"></script>
+<script type="module" src="./avatar.vafi.js?v=89"></script>
 
 <!-- Aplikace -->
 <!-- Engine -->
-<script type="module" src="./vafi.engine.js?v=9"></script>
+<script type="module" src="./vafi.engine.js?v=89"></script>
 
 <!-- Hlas -->
 <script type="module">
-  import { initVoice, say } from './voice.io.js?v=9';
+  import { initVoice, say } from './voice.io.js?v=89';
   initVoice();
   setTimeout(()=>say('Jsem vzhůru. Cítím tok světa.'),800);
 </script>
 
 <!-- Flow + Paměť -->
-<script type="module" src="./vivere.flow.js?v=3"></script>
-<script type="module" src="./vafi.memory.js?v=3"></script>
+<script type="module" src="./vivere.flow.js?v=89"></script>
+<script type="module" src="./vafi.memory.js?v=89"></script>
 
 <!-- Duše + Avatar -->
-<script type="module" src="./vafi.soul.js?v=3"></script>
-<script type="module" src="./avatar.vafi.js?v=3"></script>
+<script type="module" src="./vafi.soul.js?v=89"></script>
+<script type="module" src="./avatar.vafi.js?v=89"></script>
 
 <!-- Míza (zásobárna života) -->
-<script type="module" src="./miza.core.js?v=1"></script>
-<script type="module" src="./miza.hud.js?v=1"></script>
+<script type="module" src="./miza.core.js?v=89"></script>
+<script type="module" src="./miza.hud.js?v=89"></script>
 <!-- App -->
-<script type="module" src="./app.js?v=16"></script>
+<script type="module" src="./app.js?v=89"></script>
 </body>
 </html>
