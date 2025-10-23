@@ -2,36 +2,36 @@
 <html lang="cs">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Batolesvět — Vivere atque frui</title>
-  <link rel="stylesheet" href="./style.css">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Vivere atque frui</title>
+  <link rel="stylesheet" href="./styles.css?v=2" />
 </head>
 <body>
 
-  <!-- ✨ Aura zdroje života -->
-  <div class="vaf-halo" aria-hidden="true">
-    <div class="vaf-glow"></div>
+  <!-- HUD (musí být nad plátny) -->
+  <header id="hud">
+    <span id="vafiDot" aria-hidden="true"></span>
     <span class="vaf-label">Vivere atque frui</span>
-    <div id="hud">
-  <span id="vafiDot" aria-hidden="true"></span>
-  <span class="vaf-label">Vivere atque frui</span>
-  <span> ✶ <span id="moodPct">--</span>% </span>
-  <span> ⚡ <span id="energyVal">--</span> </span>
-</div>
+    <span> ✶ <span id="moodPct">--</span>% </span>
+    <span> ⚡ <span id="energyVal">--</span> </span>
+  </header>
 
+  <!-- Plátna -->
   <canvas id="canvas"></canvas>
-<canvas id="canvasVafi"></canvas>
-<div id="vafiStatus" aria-live="polite"></div>
+  <canvas id="canvasVafi"></canvas>
 
-<!-- Pořadí je důležité -->
-<script type="module" src="./vaf.js?v=11"></script>
-<script type="module" src="./flow.js?v=11"></script>
+  <!-- Stavová hláška (šeptání) -->
+  <div id="vafiStatus" aria-live="polite"></div>
 
-<!-- NOVÉ: engine Vafi -->
-<script type="module" src="./vafi.engine.js?v=1"></script>
+  <!-- Pořadí je důležité -->
+  <script type="module" src="./vaf.js?v=11"></script>
+  <script type="module" src="./flow.js?v=11"></script>
 
-<script type="module" src="./vafi.js?v=11"></script>
-<script type="module" src="./app.js?v=11"></script>
+  <!-- NOVÉ: Vafi engine -->
+  <script type="module" src="./vafi.engine.js?v=3"></script>
 
+  <!-- Tvoje vrstvy (ponech) -->
+  <script type="module" src="./vafi.js?v=11"></script>
+  <script type="module" src="./app.js?v=12"></script>
 </body>
 </html>
