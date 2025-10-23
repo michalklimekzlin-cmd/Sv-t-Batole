@@ -24,17 +24,3 @@ VAF.attachSensors();
 Flow.init();
 VafiLayer.init();
 
-// jednoduchý HUD update (nepovinné)
-const lightEl = document.getElementById('lightLevel');
-const energyEl = document.getElementById('bioEnergy');
-let t0 = performance.now();
-function hud(){
-  const now = performance.now();
-  const t = (now - t0) / 1000;
-  const day = 60; // 60s = den (jen pro demo)
-  const light = 0.5 + 0.5 * Math.sin((t/day)*Math.PI*2);
-  lightEl.textContent = `✶ ${(light*100|0)}%`;
-  energyEl.textContent = `⚡ ${Math.round(parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--vaf-bpm')||'60'))}`;
-  requestAnimationFrame(hud);
-}
-hud();
