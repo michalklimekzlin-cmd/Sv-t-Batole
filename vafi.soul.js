@@ -95,3 +95,11 @@ export const vafiSoul = {
   get mood(){ return mood; },
   get energy(){ return energy; }
 };
+import { onUpdate as onFlow2 } from './vivere.flow.js';
+const tickEl = document.getElementById('flowTicker');
+onFlow2(({wave, vitality})=>{
+  if(!tickEl) return;
+  const dir = wave>=0 ? '▲' : '▼';
+  tickEl.className = wave>=0 ? 'up' : 'down';
+  tickEl.textContent = `Flow ${dir} ${(Math.abs(wave)*100|0)} · ⚡${(vitality*100|0)}%`;
+});
