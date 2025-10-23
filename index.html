@@ -47,12 +47,15 @@
 <script type="module" src="./vafi.engine.js?v=89"></script>
 
 <!-- Hlas -->
+<!-- Hlas -->
 <script type="module">
-  import { initVoice, say } from './voice.io.js?v=89';
-  initVoice();
+const V = window.V || 'dev';
+const { initVoice, say } = await import(`./voice.io.js?v=${V}`);
 
-  // malý pozdrav po načtení
-  setTimeout(() => say('Jsem vzhůru. Zkus mě ťuknout, nebo promluv.'), 800);
+initVoice();
+
+// malý pozdrav po načtení
+setTimeout(() => say('Jsem vzhůru. Cítím tok...'), 800);
 </script>
 <!-- Duše a Avatar -->
 <script type="module" src="./vafi.soul.js?v=89"></script>
