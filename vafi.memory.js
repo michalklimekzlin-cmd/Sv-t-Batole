@@ -1,38 +1,85 @@
-const KEY = 'vafMem_v1';
-let mem = null;
+// vafi.memory.js  — robustní lokální paměť (telefon-first)
+const DB_NAME = 'vafi.db';
+const STORE = 'state';
+const KEY = 'soul';
+const LS_KEY = 'VAFI_DATA_V2';  // zvedni pokud měníš strukturu
+const SAVE_DEBOUNCE_MS = 400;
 
-function load() {
-  if (mem) return mem;
-  try { mem = JSON.parse(localStorage.getItem(KEY) || '{}'); }
-  catch { mem = {}; }
-  mem.createdAt ??= Date.now();
-  mem.updatedAt ??= Date.now();
-  mem.seenCount ??= 0;
-  mem.lastMood ??= 0.6;
-  mem.lastEnergy ??= 0.7;
-  mem.lastSeenAt ??= Date.now();
-  return mem;
+let idb;
+let saveTimer = null;
+
+function openDB(){
+  return new Promise((resolve) => {
+    if (!('indexedDB' in self)) return resolve(null);
+    const req = indexedDB.open(DB_NAME, 1);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE);
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => resolve(null);
+  });
 }
-function save() {
-  if (!mem) return;
-  mem.updatedAt = Date.now();
-  localStorage.setItem(KEY, JSON.stringify(mem));
+
+async function idbGet(db){
+  return new Promise((resolve) => {
+    try{
+      const tx = db.transaction(STORE, 'readonly');
+      const st = tx.objectStore(STORE);
+      const r = st.get(KEY);
+      r.onsuccess = () => resolve(r.result || null);
+      r.onerror = () => resolve(null);
+    }catch{ resolve(null); }
+  });
 }
-export function remember(k, v){ const m=load(); m[k]=v; save(); }
-export function recall(k, f=null){ const m=load(); return m[k]??f; }
-export function bump(k,d=1){ const m=load(); const v=+m[k]??0+d; m[k]=v; save(); return v; }
-export function snapshotMood(mood,energy){
-  const m=load();
-  m.lastMood=mood; m.lastEnergy=energy; m.lastSeenAt=Date.now();
-  save();
+
+async function idbSet(db, value){
+  return new Promise((resolve) => {
+    try{
+      const tx = db.transaction(STORE, 'readwrite');
+      const st = tx.objectStore(STORE);
+      const r = st.put(value, KEY);
+      r.onsuccess = () => resolve(true);
+      r.onerror = () => resolve(false);
+    }catch{ resolve(false); }
+  });
 }
-export function getSnapshot(){
-  const m=load();
-  return {createdAt:m.createdAt,updatedAt:m.updatedAt,lastSeenAt:m.lastSeenAt,
-          lastMood:m.lastMood,lastEnergy:m.lastEnergy,seenCount:m.seenCount};
+
+function lsGet(){
+  try{
+    const raw = localStorage.getItem(LS_KEY);
+    return raw ? JSON.parse(raw) : null;
+  }catch{ return null; }
 }
-export function resetMemory(hard=false){
-  if(hard)localStorage.removeItem(KEY);
-  mem=null; load(); save();
+function lsSet(value){
+  try{ localStorage.setItem(LS_KEY, JSON.stringify(value)); }catch{}
 }
-load();
+
+export const Memory = {
+  async load(){
+    if (!idb) idb = await openDB();
+    // 1) zkuste IndexedDB
+    let v = idb ? await idbGet(idb) : null;
+    // 2) fallback localStorage
+    if (!v) v = lsGet();
+    return v; // null = první spuštění / žádná minulost
+  },
+  saveSoon(value){
+    // odlehčené časté zápisy
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => { Memory.save(value); }, SAVE_DEBOUNCE_MS);
+  },
+  async save(value){
+    if (!idb) idb = await openDB();
+    if (idb) await idbSet(idb, value);
+    lsSet(value); // sekundární kopie (i pro PWA izolaci)
+  }
+};
+
+// příjem "storage" událostí (pokud běží víc oken)
+window.addEventListener('storage', (e)=>{
+  if (e.key === LS_KEY) {
+    // necháváme na vyšší vrstvě – tady jen signalizace by šla přes CustomEvent
+    window.dispatchEvent(new CustomEvent('vafi-storage-updated'));
+  }
+});
