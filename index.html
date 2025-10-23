@@ -3,67 +3,93 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Svět Batole</title>
+  <title>Svět Batole v0.92</title>
   <link rel="icon" href="./favicon.ico" />
-</head>
-<body>
 
+  <!-- 🌌 ZÁKLADNÍ STYL -->
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: #000;
+      color: #cfe;
+      overflow: hidden;
+      -webkit-text-size-adjust: 100%;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      background: transparent;
+    }
+    .hud, .badge, .vafi-whisper {
+      backdrop-filter: blur(6px) saturate(120%);
+      background: rgba(18,16,30,.6);
+      color: #e7deff;
+    }
+  </style>
+</head>
+
+<body>
   <canvas id="core"></canvas>
 
-  <!-- HLAS + PROBUZENÍ -->
+  <!-- 🗣️ Hlas + Probuzení -->
   <script type="module">
-    import { initVoice, say } from './voice.io.js?v=89';
+    import { initVoice, say } from './voice.io.js?v=91';
     initVoice();
     setTimeout(() => say('Jsem vzhůru. Cítím tok světa.'), 800);
   </script>
 
-  <!-- VERZE / CACHE BUST -->
+  <!-- 🧩 Verze pro cache bust -->
   <script>
-    window.V = (new Date()).toISOString().slice(0, 19).replace(/[-:T]/g, '');
+    window.V = (new Date()).toISOString().slice(0,19).replace(/[-:T]/g,'');
   </script>
 
-  <!-- Flow + Paměť -->
+  <!-- 🌊 Flow + Paměť -->
   <script type="module" src="./vivere.flow.js?v="+window.V></script>
   <script type="module" src="./vafi.memory.v1.1.js?v="+window.V></script>
 
-  <!-- Týmy -->
+  <!-- ⚙️ Týmy -->
   <script type="module" src="./team.human.js?v=91"></script>
   <script type="module" src="./team.ai.js?v=91"></script>
   <script type="module" src="./team.glyph.js?v=91"></script>
   <script type="module" src="./team.layout.js?v=91"></script>
 
-  <!-- Duše + Avatar -->
+  <!-- 💠 Duše + Avatar -->
   <script type="module" src="./vafi.soul.js?v=91"></script>
   <script type="module" src="./config.js?v=91"></script>
   <script type="module" src="./state.core.js?v=91"></script>
   <script type="module" src="./avatar.vafi.js?v=91"></script>
   <script type="module" src="./vafi.dreams.js?v=91"></script>
 
-  <!-- Míza (zásobárna života) -->
+  <!-- 🌿 Míza (zásobárna života) -->
   <script type="module" src="./miza.core.js?v=91"></script>
   <script type="module" src="./miza.hud.js?v=91"></script>
 
-  <!-- App -->
+  <!-- 🧭 App -->
   <script type="module" src="./mk.core.js?v=91"></script>
   <script type="module" src="./app.js?v="+window.V></script>
   <script type="module" src="./notify.local.js?v=91"></script>
 
-  <!-- TEST OVERLAY – po testu klidně smaž -->
+  <!-- 🔬 TEST OVERLAY (přehled stavů) -->
   <script>
   (() => {
-    const tag = (ok, label) => `<span style="margin-right:.5rem;opacity:.9">${ok?'🟢':'🔴'} ${label}</span>`;
+    const tag = (ok, label) => `<span style="margin-right:.5rem">${ok?'🟢':'🔴'} ${label}</span>`;
     const el = document.createElement('div');
     el.style.cssText = `
-      position:fixed;left:12px;bottom:12px;padding:.4rem .6rem;border:1px solid #3a5;
-      background:rgba(0,20,20,.6);backdrop-filter:blur(8px) saturate(120%);
-      color:#bff;font:600 12px system-ui;z-index:99999;border-radius:.6rem
+      position:fixed;left:12px;bottom:12px;padding:.4rem .6rem;
+      border:1px solid #3a5;background:rgba(0,20,20,.6);
+      backdrop-filter:blur(8px) saturate(120%);
+      color:#bff;font:600 12px system-ui;z-index:99999;
+      border-radius:.6rem
     `;
     function render(){
-      const stateOk = !!window.StateCore?.get;
-      const soulOk  = !!window.VafiSoul?.get;
-      const dreamOk = !!window.Dreams?.save;
-      const layOk   = !!window.TeamLayout?.mount;
-      el.innerHTML = `${tag(stateOk,'State')} ${tag(soulOk,'Soul')} ${tag(dreamOk,'Dreams')} ${tag(layOk,'Badges')} <span>${new Date().toLocaleTimeString()}</span>`;
+      const s = !!window.StateCore?.get;
+      const d = !!window.VafiSoul?.get;
+      const r = !!window.Dreams?.save;
+      const l = !!window.TeamLayout?.mount;
+      el.innerHTML = `${tag(s,'State')} ${tag(d,'Soul')} ${tag(r,'Dreams')} ${tag(l,'Layout')} ${new Date().toLocaleTimeString()}`;
     }
     render(); setInterval(render, 1000);
     document.body.appendChild(el);
