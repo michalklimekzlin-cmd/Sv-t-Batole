@@ -1,3 +1,5 @@
+if (window.__AVATAR_ACTIVE__) { console.warn('Debug avatar přeskočen'); throw 0; }
+window.__AVATAR_ACTIVE__ = true;
 // zabraň dvojímu spuštění
 if (window.__AVATAR_ACTIVE__) { throw new Error('Avatar už běží'); }
 window.__AVATAR_ACTIVE__ = true;
