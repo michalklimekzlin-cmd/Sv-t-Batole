@@ -20,6 +20,28 @@ export async function spawnAIHelper() {
   box.addEventListener('click', () => {
     say('Jsem Orbit. Když řekneš „Ahoj“, Vafi odpoví podle nálady.');
   }, { passive: true });
+  // dvoj-klepnutí na Orbit => lokální notifikace za 5s
+box.addEventListener('dblclick', async () => {
+  try{
+    // povolení
+    if (!('Notification' in window)) { alert('Tento prohlížeč neumí notifikace'); return; }
+    const perm = await Notification.requestPermission();
+    if (perm !== 'granted') { alert('Povol prosím notifikace pro Vafi'); return; }
+
+    // přes Service Worker (sw.js už máš registrovaný v indexu)
+    const reg = await navigator.serviceWorker.getRegistration();
+    if (!reg) { alert('Service Worker není registrovaný'); return; }
+
+    await reg.showNotification('Vafi • test', {
+      body: 'Ahoj z pozadí. Funguje to ✅',
+      tag: 'vafi-test',
+      vibrate: [60,80,60],
+      badge: './icon-192.png',
+      icon: './icon-512.png',
+      data: { url: location.href }
+    });
+  }catch(e){ console.warn(e); }
+}, { passive:true });
 
   // Orbit naslouchá světu
   window.addEventListener('team:pulse', e => {
