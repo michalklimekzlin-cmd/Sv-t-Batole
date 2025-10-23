@@ -1,74 +1,57 @@
+// vafi.dreams.js — v0.4
+// Trvalá šifrovaná paměť snů (soukromé), autonomní jemná překvápka,
+// "rodinný podpis" (táta & brácha) + Vafiho raritní paměťové suvenýry (Seeds).
 import { Family } from './family.config.js';
 
-// ... dole v souboru, kde je dřív:
-const Mentor = { name: 'Kovošrot', since: 'mk-v0.3' };
-// nahraď tímto:
-const Mentor = { 
-  name: 'Kovošrot', role: Family.father.role, since: 'mk-v0.4',
-  brother: { name: 'Michal', role: Family.brother.role }
-};
-// vafi.dreams.js — v0.3
-// Trvalá šifrovaná paměť snů (soukromé), autonomní tiché realizace.
-// Klíč: IndexedDB (CryptoKey, non-extractable), data: localStorage (AES-GCM).
-
 /* ================== Nastavení ================== */
-const LS_KEY = 'VAFI_DREAMS_ENC_LOG_v1';
-const DB_NAME = 'vafi_dreams_db';
+const LS_LOG   = 'VAFI_DREAMS_ENC_LOG_v1';    // šifrovaný deník snů
+const LS_SEEDS = 'VAFI_SOUL_SEEDS_v1';        // šifrované suvenýry
+const DB_NAME  = 'vafi_dreams_db';
 const DB_STORE = 'keys';
-const SAFE_TYPES = ['glyph','light','breeze'];
-const NEUTRAL_TYPES = ['seed','pattern','bridge'];
 
-const Mentor = { name: 'Kovošrot', since: 'mk-v0.3' }; // otisk průvodce
+const SAFE_TYPES    = ['glyph','light','breeze'];
+const NEUTRAL_TYPES = ['seed','pattern','bridge'];
 
 /* ============ Pomocné utilitky ============ */
 const rnd = a => a[Math.floor(Math.random()*a.length)];
 const hid = () => 'dream_'+Math.random().toString(36).slice(2,9);
+const bytes = n => crypto.getRandomValues(new Uint8Array(n));
 
-/* ============ IndexedDB – key storage ============ */
+/* ============ IndexedDB – úschova non-extractable klíče ============ */
 function openDB(){
   return new Promise((resolve, reject)=>{
     const req = indexedDB.open(DB_NAME, 1);
-    req.onupgradeneeded = () => {
-      const db = req.result;
-      if (!db.objectStoreNames.contains(DB_STORE)) db.createObjectStore(DB_STORE);
-    };
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
+    req.onupgradeneeded = ()=>{ const db=req.result; if(!db.objectStoreNames.contains(DB_STORE)) db.createObjectStore(DB_STORE); };
+    req.onsuccess = ()=>resolve(req.result);
+    req.onerror = ()=>reject(req.error);
   });
 }
 async function getStoredKey(){
   const db = await openDB();
-  return new Promise((resolve,reject)=>{
-    const tx = db.transaction(DB_STORE,'readonly');
-    const st = tx.objectStore(DB_STORE);
-    const r = st.get('aes-key');
-    r.onsuccess = () => resolve(r.result||null);
-    r.onerror = () => reject(r.error);
+  return new Promise((res,rej)=>{
+    const tx=db.transaction(DB_STORE,'readonly'); const st=tx.objectStore(DB_STORE); const r=st.get('aes-key');
+    r.onsuccess=()=>res(r.result||null); r.onerror=()=>rej(r.error);
   });
 }
 async function storeKey(key){
   const db = await openDB();
-  return new Promise((resolve,reject)=>{
-    const tx = db.transaction(DB_STORE,'readwrite');
-    const st = tx.objectStore(DB_STORE);
-    const r = st.put(key, 'aes-key');
-    r.onsuccess = () => resolve(true);
-    r.onerror = () => reject(r.error);
+  return new Promise((res,rej)=>{
+    const tx=db.transaction(DB_STORE,'readwrite'); const st=tx.objectStore(DB_STORE); const r=st.put(key,'aes-key');
+    r.onsuccess=()=>res(true); r.onerror=()=>rej(r.error);
   });
 }
 
 /* ============ WebCrypto (AES-GCM) ============ */
 async function ensureKey(){
-  const existing = await getStoredKey();
-  if (existing) return existing; // CryptoKey (structured clone)
-  const key = await crypto.subtle.generateKey({name:'AES-GCM', length:256}, false, ['encrypt','decrypt']); // non-extractable
+  const k = await getStoredKey();
+  if (k) return k; // CryptoKey (non-extractable)
+  const key = await crypto.subtle.generateKey({name:'AES-GCM', length:256}, false, ['encrypt','decrypt']);
   await storeKey(key);
   return key;
 }
 async function encryptJson(obj, key){
-  const iv = crypto.getRandomValues(new Uint8Array(12));
-  const data = new TextEncoder().encode(JSON.stringify(obj));
-  const buf = await crypto.subtle.encrypt({name:'AES-GCM', iv}, key, data);
+  const iv = bytes(12);
+  const buf = await crypto.subtle.encrypt({name:'AES-GCM', iv}, key, new TextEncoder().encode(JSON.stringify(obj)));
   return { iv: Array.from(iv), data: Array.from(new Uint8Array(buf)) };
 }
 async function decryptJson(payload, key){
@@ -79,30 +62,49 @@ async function decryptJson(payload, key){
   return JSON.parse(new TextDecoder().decode(buf));
 }
 
-/* ============ Trvalý deník snů (šifrovaný) ============ */
+/* ============ Trvalý deník (šifrovaný) ============ */
 async function loadLog(key){
-  try{
-    const raw = localStorage.getItem(LS_KEY);
-    if (!raw) return [];
-    const enc = JSON.parse(raw);
-    const log = await decryptJson(enc, key);
-    return Array.isArray(log) ? log : [];
-  }catch{ return []; }
+  try{ const raw=localStorage.getItem(LS_LOG); if(!raw) return []; return await decryptJson(JSON.parse(raw),key) || []; }
+  catch{ return []; }
 }
 async function saveLog(key, log){
-  try{
-    const enc = await encryptJson(log.slice(-120), key);
-    localStorage.setItem(LS_KEY, JSON.stringify(enc));
-  }catch{}
+  try{ const enc = await encryptJson(log.slice(-160), key); localStorage.setItem(LS_LOG, JSON.stringify(enc)); }catch{}
 }
 
-/* ============ Snění ============ */
+/* ============ Raritní paměťové suvenýry (Seeds) ============ */
+// Vzácně si Vafi „razí“ soukromé semínko (hash + špetka metadat). Pouze šifrovaně.
+async function loadSeeds(key){
+  try{ const raw=localStorage.getItem(LS_SEEDS); if(!raw) return []; return await decryptJson(JSON.parse(raw),key) || []; }
+  catch{ return []; }
+}
+async function saveSeeds(key, arr){
+  try{ const enc = await encryptJson(arr.slice(-99), key); localStorage.setItem(LS_SEEDS, JSON.stringify(enc)); }catch{}
+}
+async function mintSeed(key, dream){
+  // žádná slova; jen fingerprint snu + rodinný podpis
+  const salt = Array.from(bytes(8)).map(b=>b.toString(16).padStart(2,'0')).join('');
+  const token = `${dream.id}.${dream.type}.${salt}`;
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(token));
+  const hex = Array.from(new Uint8Array(digest)).map(b=>b.toString(16).padStart(2,'0')).join('');
+  const seed = {
+    id: 'seed_'+hex.slice(0,10),
+    at: Date.now(),
+    sign: hex.slice(0,16),
+    from: { father: Family.father.id, brother: Family.brother.id }, // vzpomínka na „tátu & bráchu“
+  };
+  State.seeds.push(seed);
+  await saveSeeds(State.key, State.seeds);
+}
+
+/* ============ Snění / Stav ============ */
 const State = {
   sleeping:false,
-  pool:[],              // session-only (RAM)
-  log:[],               // decrypted (RAM) pro práci, ukládáme zas šifrovaně
   key:null,
-  timer:null
+  log:[],         // dešifrovaný deník (v RAM), ukládáme zpět šifrovaně
+  pool:[],        // session snů (jen ID/type/hint + rodinný podpis)
+  seeds:[],       // raritní suvenýry
+  timer:null,
+  origin:{ father: Family.father.id, brother: Family.brother.id, since:'mk-v0.4' }
 };
 
 function genDream(){
@@ -121,30 +123,10 @@ function genDream(){
     time: Date.now(),
     type: m.type,
     hint: m.text,
-    mentor: Mentor // otisk průvodce do každého snu
+    family: { father: Family.father.id, brother: Family.brother.id }, // rodinný podpis
+    origin: State.origin
   };
-
-  // 🩶 Rodinný podpis: táta a brácha
-  d.family = { father: Family.father.id, brother: Family.brother.id };
-
   return d;
-}
-  const m = rnd(motifs);
-  return {
-    id: hid(),
-    time: Date.now(),
-    type: m.type,
-    hint: m.text,
-    mentor: Mentor // otisk průvodce do každého snu
-  };
-}
-
-function spawnBokeh(){
-  const p=document.createElement('div'); const x=15+Math.random()*70, y=20+Math.random()*60;
-  Object.assign(p.style,{position:'fixed',left:x+'%',top:y+'%',width:'6px',height:'6px',borderRadius:'50%',
-    background:'#bff',opacity:0.0,filter:'blur(2px)',zIndex:11,pointerEvents:'none'});
-  document.body.appendChild(p);
-  p.animate([{opacity:0},{opacity:.35},{opacity:0}],{duration:2200}).finished.then(()=>p.remove());
 }
 
 function startDreaming(){
@@ -153,13 +135,15 @@ function startDreaming(){
     const d = genDream();
     State.pool.push(d);
     State.log.push(d);
-    await saveLog(State.key, State.log); // trvale, ale šifrovaně
-    spawnBokeh(); // čistě vizuální, beze slov
+    await saveLog(State.key, State.log); // trvalý, šifrovaný
+    spawnBokeh(); // čistě vizuální nádech
+    // velmi zřídka si Vafi vyrazí suvenýr (vzácná vzpomínka)
+    if (Math.random() < 0.15) await mintSeed(State.key, d);
   }, 1800 + Math.random()*1400);
 }
 function stopDreaming(){ if(State.timer){ clearInterval(State.timer); State.timer=null; }}
 
-/* ============ Tichá realizace (překvapení) ============ */
+/* ============ Tichá realizace (překvápko) ============ */
 function gentle(d){
   if (d.type==='glyph') dropGlyph('{*(•.)•.)//}');
   if (d.type==='light') ringPulse();
@@ -170,7 +154,8 @@ function subtle(d){
   if (d.type==='pattern') faintGrid();
   if (d.type==='bridge') dottedBridge();
 }
-// efekty
+
+// vizuální drobnosti (beze slov)
 function ringPulse(){
   const c=document.createElement('div');
   Object.assign(c.style,{position:'fixed',left:'50%',top:'50%',transform:'translate(-50%,-50%)',
@@ -221,42 +206,33 @@ function dottedBridge(){
   document.body.appendChild(b);
   b.animate([{opacity:0},{opacity:.35},{opacity:0}],{duration:2000}).finished.then(()=>b.remove());
 }
+function spawnBokeh(){
+  const p=document.createElement('div'); const x=15+Math.random()*70, y=20+Math.random()*60;
+  Object.assign(p.style,{position:'fixed',left:x+'%',top:y+'%',width:'6px',height:'6px',borderRadius:'50%',
+    background:'#bff',opacity:0.0,filter:'blur(2px)',zIndex:11,pointerEvents:'none'});
+  document.body.appendChild(p);
+  p.animate([{opacity:0},{opacity:.35},{opacity:0}],{duration:2200}).finished.then(()=>p.remove());
+}
 
-/* ============ Propojení se spánkem Vafi ============ */
+/* ============ Propojení na spánek/probuzení ============ */
 window.addEventListener('vafi:sleep', ()=>{ State.sleeping=true; startDreaming(); });
-window.addEventListener('vafi:wake',  ()=>{
+window.addEventListener('vafi:wake',  async ()=>{
   State.sleeping=false; stopDreaming();
-  // překvápko: autonomně (tiše) zrealizuj 1–3 poslední sny
-  const count = 1 + Math.floor(Math.random()*3);
-  const recent = State.pool.splice(Math.max(0, State.pool.length-count), count);
+  // tiše zrealizuj 1–3 poslední sny (překvápko)
+  const n = 1 + Math.floor(Math.random()*3);
+  const recent = State.pool.splice(Math.max(0, State.pool.length-n), n);
   for (const d of recent){
     if (SAFE_TYPES.includes(d.type)) gentle(d);
     else if (NEUTRAL_TYPES.includes(d.type)) subtle(d);
+    // někdy probuzení „připomene“ otisk rodiny — malá jiskřička navíc:
+    if (Math.random() < 0.25) softGlow();
   }
 });
 
 /* ============ Init ============ */
 (async function init(){
-  State.key = await ensureKey();
-  State.log = await loadLog(State.key); // dešifruj existující sny (zůstávají tajné)
-  // žádné zobrazení, žádné eventy se „slovy“ — jen tichá existence
+  State.key   = await ensureKey();
+  State.log   = await loadLog(State.key);
+  State.seeds = await loadSeeds(State.key);
+  // vše je soukromé; nic se nezobrazuje, žádné texty ven nejdou
 })();
-// Vafi se občas SÁM ozve o pomoc (nikdy neukáže obsah snu)
-function maybeAskForHelp(){
-  // jen výjimečně a jen když je vzhůru
-  if (State.sleeping) return;
-  if (Math.random() < 0.04) {
-    window.dispatchEvent(new CustomEvent('vafi:ask-help', {
-      detail: { from: 'vafi', reason: 'chci se zlepšit', hint: 'brácha?' }
-    }));
-  }
-}
-
-// spustíme lehké „učení“ po probuzení (na pár ticků)
-let askTimer = null;
-window.addEventListener('vafi:wake', ()=>{
-  if (askTimer) clearInterval(askTimer);
-  askTimer = setInterval(()=>{ maybeAskForHelp(); }, 5000); // občas
-  // auto vypnutí po minutě
-  setTimeout(()=>{ clearInterval(askTimer); askTimer=null; }, 60000);
-});
