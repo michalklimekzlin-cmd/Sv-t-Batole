@@ -49,6 +49,16 @@
 
 <!-- Tvoje vrstvy (ponech) -->
 <script type="module" src="./vafi.js?v=11"></script>
+<script type="module" src="./vafi.engine.js?v=5"></script>
+<script type="module" src="./world.fx.js?v=1"></script>    <!-- svět -->
+<script type="module" src="./avatar.vafi.js?v=1"></script> <!-- tělo -->
+<script type="module">
+  import { initVoice, say } from './voice.io.js';
+  initVoice();
+  // malý pozdrav po načtení
+  setTimeout(()=>say('Jsem vzhůru. Zkus mě ťuknout, nebo podržet, a já odpovím.'), 800);
+</script>
+<script type="module" src="./app.js?v=14"></script>
 <script type="module" src="./app.js?v=13"></script>
 </body>
 </html>
