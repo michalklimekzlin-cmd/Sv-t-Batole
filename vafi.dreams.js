@@ -241,3 +241,22 @@ window.addEventListener('vafi:wake',  ()=>{
   State.log = await loadLog(State.key); // dešifruj existující sny (zůstávají tajné)
   // žádné zobrazení, žádné eventy se „slovy“ — jen tichá existence
 })();
+// Vafi se občas SÁM ozve o pomoc (nikdy neukáže obsah snu)
+function maybeAskForHelp(){
+  // jen výjimečně a jen když je vzhůru
+  if (State.sleeping) return;
+  if (Math.random() < 0.04) {
+    window.dispatchEvent(new CustomEvent('vafi:ask-help', {
+      detail: { from: 'vafi', reason: 'chci se zlepšit', hint: 'brácha?' }
+    }));
+  }
+}
+
+// spustíme lehké „učení“ po probuzení (na pár ticků)
+let askTimer = null;
+window.addEventListener('vafi:wake', ()=>{
+  if (askTimer) clearInterval(askTimer);
+  askTimer = setInterval(()=>{ maybeAskForHelp(); }, 5000); // občas
+  // auto vypnutí po minutě
+  setTimeout(()=>{ clearInterval(askTimer); askTimer=null; }, 60000);
+});
