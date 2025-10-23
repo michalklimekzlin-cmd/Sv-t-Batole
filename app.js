@@ -43,4 +43,5 @@ VAF.start();
 VAF.attachSensors();
 Flow.init();
 VafiLayer.init();
-
+spawnGlyphs();
+animateGlyphs();
