@@ -48,6 +48,13 @@
 
 <!-- Hlas -->
 <script type="module">
+  import { initVoice, say } from './voice.io.js?v=90';
+  initVoice();
+  setTimeout(() => say('Jsem vzhůru. Cítím tok kolem sebe...'), 800);
+</script>
+
+<!-- Hlas -->
+<script type="module">
 const V = window.V || 'dev';
 const { initVoice, say } = await import(`./voice.io.js?v=${V}`);
 
