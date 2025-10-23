@@ -1,4 +1,6 @@
 // Batolesvět v0.4 — start
+import { Teams } from './teams.js';
+import { spawnGlyphs, animateGlyphs } from './team.glyphs.js';
 import { VAF }       from './vaf.js?v=11';
 import { Flow }      from './flow.js?v=11';
 import { VafiLayer } from './vafi.js?v=11';
