@@ -1,3 +1,6 @@
+// zabraň dvojímu spuštění
+if (window.__AVATAR_ACTIVE__) { throw new Error('Avatar už běží'); }
+window.__AVATAR_ACTIVE__ = true;
 // avatar.vafi.js — Vafi s dýcháním, mžouráním, spánkem a SNY ✨
 
 export async function spawnVafi() {
