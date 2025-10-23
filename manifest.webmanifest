@@ -1,0 +1,9 @@
+{
+  "name": "Batolesvět",
+  "short_name": "Batolesvět",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#00121d",
+  "theme_color": "#00121d",
+  "icons": []
+}
