@@ -1,0 +1,67 @@
+// team.glyph.js — Tým 4: Glyphs (znaky a symboly) v0.92
+// Každý znak má vlastní dech, který posílá impulzy do středu (Svět: Michal Klimek)
+
+import { Flow } from './vivere.flow.js';
+
+let t = 0;
+let glyphs = [];
+const glyphSet = ['&','`','´','٩','[','˘',']','*','(','.',')','•','/','{','}','^','%','ß'];
+
+// vytvoření „živých“ glyphů na scéně
+function initGlyphs(){
+  const canvas = document.getElementById('canvasVafi');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  for (let i = 0; i < 10; i++){
+    glyphs.push({
+      x: Math.random(),
+      y: Math.random(),
+      c: glyphSet[Math.floor(Math.random()*glyphSet.length)],
+      s: 18 + Math.random()*16,
+      v: Math.random()*0.8 + 0.2
+    });
+  }
+
+  function draw(){
+    t += Flow.dt || 0.016;
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.save();
+    ctx.fillStyle = 'rgba(160,255,220,0.7)';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = 'bold 22px monospace';
+
+    for (const g of glyphs){
+      const px = g.x * canvas.width;
+      const py = (g.y + 0.1*Math.sin(t*g.v)) * canvas.height;
+      ctx.save();
+      ctx.translate(px, py);
+      ctx.rotate(Math.sin(t*g.v*2)*0.2);
+      ctx.fillText(g.c, 0, 0);
+      ctx.restore();
+    }
+    ctx.restore();
+
+    breathe();
+    requestAnimationFrame(draw);
+  }
+  requestAnimationFrame(draw);
+}
+
+// dechu glyphů – vysílá pulzy do středu MK
+function breathe(){
+  // drobný puls každé ~2 sekundy
+  if ((t % 2) < 0.02) window.MK?.pulse('glyph', 0.01);
+
+  // občasné silnější „záře“ znaků (náhodně)
+  if (Math.random() < 0.002){
+    const e = new CustomEvent('team:pulse', {
+      detail: { team:'glyph', amount:0.08 }
+    });
+    window.dispatchEvent(e);
+  }
+}
+
+// spustit po načtení
+window.addEventListener('load', initGlyphs);
