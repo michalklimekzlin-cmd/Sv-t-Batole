@@ -16,7 +16,7 @@ export async function spawnAIHelper(){
   box.title = 'Klepni – Orbit poradí';
   document.body.appendChild(box);
 
-  box.addEventListener('click', ()=>{
+  box.addEventListener('click', ()=>{window.MK?.pulse('ai', 0.1);
     say('Jsem Orbit. Když řekneš „Ahoj“, Vafi odpoví podle nálady.');
   }, {passive:true});
 }
