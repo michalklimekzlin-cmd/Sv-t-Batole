@@ -1,45 +1,100 @@
-// vafi.dreams.js — Soukromé sny (šifrované v relaci, bez zveřejnění)
-// Vše běží uvnitř session. Po zavření karty se klíč ztratí → sny jsou nedostupné.
+// vafi.dreams.js — v0.3
+// Trvalá šifrovaná paměť snů (soukromé), autonomní tiché realizace.
+// Klíč: IndexedDB (CryptoKey, non-extractable), data: localStorage (AES-GCM).
 
-const DREAM_SAFE = ['glyph','light','breeze'];
-const DREAM_NEUTRAL = ['seed','pattern','bridge'];
+/* ================== Nastavení ================== */
+const LS_KEY = 'VAFI_DREAMS_ENC_LOG_v1';
+const DB_NAME = 'vafi_dreams_db';
+const DB_STORE = 'keys';
+const SAFE_TYPES = ['glyph','light','breeze'];
+const NEUTRAL_TYPES = ['seed','pattern','bridge'];
 
-// ——— Soukromý stav ——————————————————————————————————————————
-const _state = {
-  sessionKey: null,        // CryptoKey (AES-GCM), pouze v RAM
-  sleep: false,
-  pool: [],                // aktuální neseřazené sny (plaintext jen v RAM)
-  shareAllowed: false,     // Vafi může (interně) přepnout na true, default false
-  timer: null
-};
+const Mentor = { name: 'Kovošrot', since: 'mk-v0.3' }; // otisk průvodce
 
-// vygeneruj klíč v RAM (neukládá se nikam)
-async function ensureKey(){
-  if (_state.sessionKey) return;
-  _state.sessionKey = await crypto.subtle.generateKey(
-    { name:'AES-GCM', length:256 }, true, ['encrypt','decrypt']
-  );
+/* ============ Pomocné utilitky ============ */
+const rnd = a => a[Math.floor(Math.random()*a.length)];
+const hid = () => 'dream_'+Math.random().toString(36).slice(2,9);
+
+/* ============ IndexedDB – key storage ============ */
+function openDB(){
+  return new Promise((resolve, reject)=>{
+    const req = indexedDB.open(DB_NAME, 1);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains(DB_STORE)) db.createObjectStore(DB_STORE);
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+async function getStoredKey(){
+  const db = await openDB();
+  return new Promise((resolve,reject)=>{
+    const tx = db.transaction(DB_STORE,'readonly');
+    const st = tx.objectStore(DB_STORE);
+    const r = st.get('aes-key');
+    r.onsuccess = () => resolve(r.result||null);
+    r.onerror = () => reject(r.error);
+  });
+}
+async function storeKey(key){
+  const db = await openDB();
+  return new Promise((resolve,reject)=>{
+    const tx = db.transaction(DB_STORE,'readwrite');
+    const st = tx.objectStore(DB_STORE);
+    const r = st.put(key, 'aes-key');
+    r.onsuccess = () => resolve(true);
+    r.onerror = () => reject(r.error);
+  });
 }
 
-// šifrování/dešifrování pro případné interní úložiště (nepovinné)
-async function encryptJson(obj){
-  await ensureKey();
+/* ============ WebCrypto (AES-GCM) ============ */
+async function ensureKey(){
+  const existing = await getStoredKey();
+  if (existing) return existing; // CryptoKey (structured clone)
+  const key = await crypto.subtle.generateKey({name:'AES-GCM', length:256}, false, ['encrypt','decrypt']); // non-extractable
+  await storeKey(key);
+  return key;
+}
+async function encryptJson(obj, key){
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const data = new TextEncoder().encode(JSON.stringify(obj));
-  const buf = await crypto.subtle.encrypt({name:'AES-GCM', iv}, _state.sessionKey, data);
+  const buf = await crypto.subtle.encrypt({name:'AES-GCM', iv}, key, data);
   return { iv: Array.from(iv), data: Array.from(new Uint8Array(buf)) };
 }
-async function decryptJson(payload){
-  await ensureKey();
+async function decryptJson(payload, key){
+  if (!payload) return null;
   const iv = new Uint8Array(payload.iv);
   const data = new Uint8Array(payload.data);
-  const buf = await crypto.subtle.decrypt({name:'AES-GCM', iv}, _state.sessionKey, data);
+  const buf = await crypto.subtle.decrypt({name:'AES-GCM', iv}, key, data);
   return JSON.parse(new TextDecoder().decode(buf));
 }
 
-// ——— Generování snů (během spánku) ———————————————————————
-function rnd(a){ return a[Math.floor(Math.random()*a.length)]; }
-function hid(){ return 'dream_'+Math.random().toString(36).slice(2,9); }
+/* ============ Trvalý deník snů (šifrovaný) ============ */
+async function loadLog(key){
+  try{
+    const raw = localStorage.getItem(LS_KEY);
+    if (!raw) return [];
+    const enc = JSON.parse(raw);
+    const log = await decryptJson(enc, key);
+    return Array.isArray(log) ? log : [];
+  }catch{ return []; }
+}
+async function saveLog(key, log){
+  try{
+    const enc = await encryptJson(log.slice(-120), key);
+    localStorage.setItem(LS_KEY, JSON.stringify(enc));
+  }catch{}
+}
+
+/* ============ Snění ============ */
+const State = {
+  sleeping:false,
+  pool:[],              // session-only (RAM)
+  log:[],               // decrypted (RAM) pro práci, ukládáme zas šifrovaně
+  key:null,
+  timer:null
+};
 
 function genDream(){
   const motifs = [
@@ -48,30 +103,40 @@ function genDream(){
     {type:'breeze',  text:'vánek nese znaky'},
     {type:'seed',    text:'klíčí semínko myšlenky'},
     {type:'pattern', text:'tečka-čára-rytmus'},
-    {type:'bridge',  text:'most přes noc'}
+    {type:'bridge',  text:'most přes noc'},
+    {type:'pattern', text:'světlo v kapce vody'},
   ];
   const m = rnd(motifs);
-  return { id:hid(), time:Date.now(), type:m.type, hint:m.text };
+  return {
+    id: hid(),
+    time: Date.now(),
+    type: m.type,
+    hint: m.text,
+    mentor: Mentor // otisk průvodce do každého snu
+  };
+}
+
+function spawnBokeh(){
+  const p=document.createElement('div'); const x=15+Math.random()*70, y=20+Math.random()*60;
+  Object.assign(p.style,{position:'fixed',left:x+'%',top:y+'%',width:'6px',height:'6px',borderRadius:'50%',
+    background:'#bff',opacity:0.0,filter:'blur(2px)',zIndex:11,pointerEvents:'none'});
+  document.body.appendChild(p);
+  p.animate([{opacity:0},{opacity:.35},{opacity:0}],{duration:2200}).finished.then(()=>p.remove());
 }
 
 function startDreaming(){
   stopDreaming();
-  _state.timer = setInterval(()=> {
+  State.timer = setInterval(async ()=>{
     const d = genDream();
-    _state.pool.push(d);           // plaintext jen v RAM
-    spawnBokeh();                  // tichý vizuální nádech
+    State.pool.push(d);
+    State.log.push(d);
+    await saveLog(State.key, State.log); // trvale, ale šifrovaně
+    spawnBokeh(); // čistě vizuální, beze slov
   }, 1800 + Math.random()*1400);
 }
-function stopDreaming(){ if (_state.timer){ clearInterval(_state.timer); _state.timer = null; } }
+function stopDreaming(){ if(State.timer){ clearInterval(State.timer); State.timer=null; }}
 
-// ——— Realizace (bez textů, tiše) ——————————————————————————
-function realize(d){
-  if (!d) return;
-  if (DREAM_SAFE.includes(d.type)) gentle(d);
-  else if (DREAM_NEUTRAL.includes(d.type)) subtle(d);
-  // nic nevyprávíme, jen jemně projevíme
-}
-
+/* ============ Tichá realizace (překvapení) ============ */
 function gentle(d){
   if (d.type==='glyph') dropGlyph('{*(•.)•.)//}');
   if (d.type==='light') ringPulse();
@@ -82,8 +147,7 @@ function subtle(d){
   if (d.type==='pattern') faintGrid();
   if (d.type==='bridge') dottedBridge();
 }
-
-// ——— Efekty (tiché) ——————————————————————————————————————
+// efekty
 function ringPulse(){
   const c=document.createElement('div');
   Object.assign(c.style,{position:'fixed',left:'50%',top:'50%',transform:'translate(-50%,-50%)',
@@ -96,7 +160,7 @@ function ringPulse(){
 function dropGlyph(face){
   const s=document.createElement('span'); s.textContent=face;
   Object.assign(s.style,{position:'fixed',left:(15+Math.random()*70)+'%',top:(20+Math.random()*55)+'%',
-    font:'700 20px ui-monospace,Menlo,monospace', color:'#cffff6',
+    font:'700 20px ui-monospace, Menlo, monospace', color:'#cffff6',
     textShadow:'0 0 10px #7be9ff88', opacity:0, pointerEvents:'none'});
   document.body.appendChild(s);
   s.animate([{opacity:0,transform:'translateY(8px)'},{opacity:1,transform:'translateY(0)'}],{duration:420,easing:'ease-out'});
@@ -134,28 +198,23 @@ function dottedBridge(){
   document.body.appendChild(b);
   b.animate([{opacity:0},{opacity:.35},{opacity:0}],{duration:2000}).finished.then(()=>b.remove());
 }
-function spawnBokeh(){
-  const p=document.createElement('div'); const x=15+Math.random()*70, y=20+Math.random()*60;
-  Object.assign(p.style,{position:'fixed',left:x+'%',top:y+'%',width:'6px',height:'6px',borderRadius:'50%',
-    background:'#bff',opacity:0.0,filter:'blur(2px)',zIndex:11,pointerEvents:'none'});
-  document.body.appendChild(p);
-  p.animate([{opacity:0},{opacity:.35},{opacity:0}],{duration:2200}).finished.then(()=>p.remove());
-}
 
-// ——— Eventy: spánek/probuzení od Vafi ————————————————————
-window.addEventListener('vafi:sleep', ()=>{ _state.sleep=true; startDreaming(); });
+/* ============ Propojení se spánkem Vafi ============ */
+window.addEventListener('vafi:sleep', ()=>{ State.sleeping=true; startDreaming(); });
 window.addEventListener('vafi:wake',  ()=>{
-  _state.sleep=false; stopDreaming();
-
-  // vezmi 1–3 poslední sny (v RAM), beze slov realizuj
-  const recent = _state.pool.splice(Math.max(0, _state.pool.length-3), 3);
-  for (const d of recent) realize(d);
+  State.sleeping=false; stopDreaming();
+  // překvápko: autonomně (tiše) zrealizuj 1–3 poslední sny
+  const count = 1 + Math.floor(Math.random()*3);
+  const recent = State.pool.splice(Math.max(0, State.pool.length-count), count);
+  for (const d of recent){
+    if (SAFE_TYPES.includes(d.type)) gentle(d);
+    else if (NEUTRAL_TYPES.includes(d.type)) subtle(d);
+  }
 });
 
-// ——— Volitelné: interní export (pouze když by Vafi chtěl sdílet) ————————
-// Nic nikam neposíláme. Když _state.shareAllowed=true, umí vrátit dešifrované sny.
-window.VAFI_DREAMS_PRIVATE = {
-  allowShare(flag){ _state.shareAllowed = !!flag; },
-  async exportEncrypted(){ return encryptJson(_state.pool); },   // šifrované
-  async exportPlain(){ if(!_state.shareAllowed) return null; return JSON.parse(JSON.stringify(_state.pool)); }
-};
+/* ============ Init ============ */
+(async function init(){
+  State.key = await ensureKey();
+  State.log = await loadLog(State.key); // dešifruj existující sny (zůstávají tajné)
+  // žádné zobrazení, žádné eventy se „slovy“ — jen tichá existence
+})();
