@@ -1,25 +1,56 @@
-// voice.io.js — mluvení česky + jednoduché rozpoznání (kde je k dispozici)
-let synth = window.speechSynthesis; let voice = null;
+// voice.io.js — uši & ústa Vafiho
+// Jednoduchý rozpoznávač řeči + syntéza (čeština) + eventy
 
-function pickCzech(){
-  const list = synth?.getVoices?.() || [];
-  return list.find(v => (v.lang||'').toLowerCase().startsWith('cs')) ||
-         list.find(v => /czech|čeština/i.test(v.name||'')) || null;
-}
+const hasASR = typeof window !== 'undefined' &&
+  (window.SpeechRecognition || window.webkitSpeechRecognition);
+
+let recognizer;
+let listening = false;
+
 export function initVoice(){
-  if (!synth) return;
-  const set = ()=>{ voice = pickCzech(); };
-  set(); if (!voice && synth?.onvoiceschanged === null) synth.onvoiceschanged = set;
+  // posloucháme, co chce Duše říct
+  document.addEventListener('soul:say', e => {
+    if (e?.detail?.text) say(e.detail.text);
+  });
+
+  if (!hasASR) {
+    console.warn('ASR není k dispozici – použij klikání/psaní.');
+    return;
+  }
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognizer = new SR();
+  recognizer.lang = 'cs-CZ';
+  recognizer.interimResults = false;
+  recognizer.continuous = false;
+
+  recognizer.onresult = (ev) => {
+    const text = Array.from(ev.results)
+      .map(r => r[0]?.transcript || '')
+      .join(' ')
+      .trim();
+    if (text) {
+      // pošleme do světa – Duše si to vezme
+      document.dispatchEvent(new CustomEvent('voice:text', { detail: { text } }));
+    }
+  };
+  recognizer.onend = () => {
+    listening = false;
+  };
 }
+
+export function startListening(){
+  if (!recognizer || listening) return;
+  try { recognizer.start(); listening = true; } catch(_){}
+}
+
 export function say(text){
-  if (!synth){ console.log('[say]', text); return; }
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang='cs-CZ'; u.rate=1.0; u.pitch=1.0; if (voice) u.voice=voice; synth.cancel(); synth.speak(u);
+  try {
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'cs-CZ';
+    u.pitch = 1; u.rate = 1; u.volume = 1;
+    window.speechSynthesis.speak(u);
+  } catch(_){}
 }
-const SR = window.SpeechRecognition || window.webkitSpeechRecognition; let rec=null;
-export function startListening(onText){
-  if (!SR) return false;
-  if (!rec){ rec=new SR(); rec.lang='cs-CZ'; rec.interimResults=false; rec.continuous=false;
-    rec.onresult=e=>{ const t=e.results?.[0]?.[0]?.transcript||''; if (t&&onText) onText(t); };
-  } rec.start(); return true;
-}
+
+// malé UX: klepnutí do stránky spustí poslech (když je k dispozici)
+window.addEventListener('click', () => startListening(), { passive:true });
