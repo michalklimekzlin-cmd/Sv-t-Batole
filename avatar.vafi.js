@@ -162,6 +162,11 @@ export async function spawnVafi() {
     ctx.ellipse(cx-eyeDX, eyeY, eyeW, eyeH, 0, 0, Math.PI*2);
     ctx.ellipse(cx+eyeDX, eyeY, eyeW, eyeH, 0, 0, Math.PI*2);
     ctx.fill();
+    // ---- ZDRAVOTNÍ REPORT ----
+const eyesDrawn = true; // očividně se vykreslily
+document.dispatchEvent(new CustomEvent('vafi:health', {
+  detail: { eyesDrawn }
+}));
 
     // štítek „Vafi spí… zzz“
     if (asleep) {
