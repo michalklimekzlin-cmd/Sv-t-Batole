@@ -1,23 +1,28 @@
-// sw.js — PWA + notifikace; připravené i na budoucí push
-self.addEventListener('install', ()=>self.skipWaiting());
-self.addEventListener('activate', e=>e.waitUntil(self.clients.claim()));
+// sw.js — základní service worker pro PWA + notifikace
+self.addEventListener('install', () => self.skipWaiting());
+self.addEventListener('activate', (e) => e.waitUntil(self.clients.claim()));
 
-// lokální zobrazení (budoucí push handler)
-self.addEventListener('push', e=>{
-  const data = e.data ? e.data.json() : { title:'Batolesvět', body:'Zpráva' };
-  e.waitUntil(self.registration.showNotification(data.title, {
-    body: data.body, icon: data.icon || undefined, badge: data.badge || undefined,
-    vibrate: [60,30,60], data: data.data || {}
-  }));
+// lokální notifikace (funguje i bez push)
+self.addEventListener('push', (e) => {
+  const data = e.data ? e.data.json() : { title: 'Batolesvět', body: 'Zpráva' };
+  e.waitUntil(
+    self.registration.showNotification(data.title, {
+      body: data.body,
+      icon: data.icon || './icon-192.png',
+      vibrate: [60, 30, 60],
+      data: data.data || {}
+    })
+  );
 });
 
-self.addEventListener('notificationclick', e=>{
+self.addEventListener('notificationclick', (e) => {
   e.notification.close();
   e.waitUntil(
-    self.clients.matchAll({ type:'window', includeUncontrolled:true }).then(clients=>{
-      const url = './';
-      for (const c of clients){ if ('focus' in c) return c.focus(); }
-      return self.clients.openWindow(url);
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clients => {
+      for (const client of clients) {
+        if ('focus' in client) return client.focus();
+      }
+      return self.clients.openWindow('./');
     })
   );
 });
