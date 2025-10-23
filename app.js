@@ -45,3 +45,14 @@ Flow.init();
 VafiLayer.init();
 spawnGlyphs();
 animateGlyphs();
+
+// Teams bootstrap (1 zástupce od každého týmu)
+import { spawnHuman }     from './team.human.js?v=1';
+import { spawnAIHelper }  from './team.ai.js?v=1';
+import { spawnWorldSpirit } from './team.world.js?v=1';
+import { spawnGlyph }     from './team.glyph.js?v=1';
+
+spawnHuman();
+spawnAIHelper();
+spawnWorldSpirit();
+spawnGlyph();
