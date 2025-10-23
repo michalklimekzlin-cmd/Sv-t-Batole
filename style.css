@@ -31,3 +31,29 @@ html, body { margin:0; padding:0; height:100%; background:#000; font-family: ui-
   transition: opacity .12s linear;
 }
 .vaf-label{ font-size:12px; color:#a3a3b2; letter-spacing:.06em }
+#hud {
+  display:flex; gap:.8rem; align-items:center;
+}
+#vafiDot {
+  width:.9rem; height:.9rem; border-radius:50%;
+  display:inline-block; box-shadow:0 0 .6rem currentColor;
+  animation:vafiPulse 2.2s ease-in-out infinite;
+}
+@keyframes vafiPulse {
+  0%,100% {transform:scale(1)} 
+  50% {transform:scale(1.15)}
+}
+#vafiStatus {
+  position:fixed; left:1rem; bottom:1rem; opacity:.8; font-size:.9rem;
+}
+.vafi-whisper {
+  position:fixed; right:1.2rem; bottom:4.6rem; opacity:0;
+  transform:translateY(8px) scale(.9);
+  transition:all .45s ease;
+  font-size:1.4rem; color:rgba(180,255,230,.92);
+  text-shadow:0 0 .6rem currentColor;
+  pointer-events:none;
+}
+.vafi-whisper.on {
+  opacity:1; transform:translateY(0) scale(1);
+}
