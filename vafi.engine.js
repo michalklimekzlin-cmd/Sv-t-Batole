@@ -168,6 +168,15 @@ function onPointerUp(){
 addEventListener('pointerdown', onPointerDown, {passive:true});
 addEventListener('pointerup',   onPointerUp,   {passive:true});
 addEventListener('pointercancel', onPointerUp, {passive:true});
+// hlasové události z voice.io.js
+addEventListener('vafi:toggleSleep', ()=>{
+  VAFI.asleep = !VAFI.asleep;
+  VAFI.mood = clamp(VAFI.mood + (VAFI.asleep?-5:5),0,100);
+});
+addEventListener('vafi:pet', ()=>{
+  VAFI.mood = clamp(VAFI.mood + 8, 0, 100);
+  VAFI.energy = clamp(VAFI.energy + 3, 0, 100);
+});
 
 export function addVafi(name='Vafi'){ const v = createVafi(name); VAFIS.push(v); save(VAFIS); return v; }
 export function focusVafi(id){ const v = VAFIS.find(x=>x.id===id); if (v){ VAFI=v; updateHUD(); } return VAFI; }
