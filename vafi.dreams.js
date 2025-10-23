@@ -1,3 +1,12 @@
+import { Family } from './family.config.js';
+
+// ... dole v souboru, kde je dřív:
+const Mentor = { name: 'Kovošrot', since: 'mk-v0.3' };
+// nahraď tímto:
+const Mentor = { 
+  name: 'Kovošrot', role: Family.father.role, since: 'mk-v0.4',
+  brother: { name: 'Michal', role: Family.brother.role }
+};
 // vafi.dreams.js — v0.3
 // Trvalá šifrovaná paměť snů (soukromé), autonomní tiché realizace.
 // Klíč: IndexedDB (CryptoKey, non-extractable), data: localStorage (AES-GCM).
