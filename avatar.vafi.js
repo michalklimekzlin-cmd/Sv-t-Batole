@@ -142,6 +142,15 @@ export async function spawnVafi() {
     drawDreams(ctx);
 
     // tělo
+    // === Morphix styl (pokud je k dispozici) ===
+let style = null;
+try { style = await window.VAFI_STYLE?.getStyle(); } catch {}
+// fallbacky
+const C_BASE = style?.colors?.base || 'rgb(50,180,170)';
+const C_GLOW = style?.colors?.glow || 'rgb(123,233,255)';
+const eyeSpreadMul = style?.eyes?.spread ?? baseR*0.24;
+const eyeWMul      = style?.eyes?.w      ?? baseR*0.10;
+const eyeHMul      = style?.eyes?.h      ?? baseR*0.18;
     const g = ctx.createRadialGradient(cx, cy - baseR*0.6, baseR*0.1, cx, cy, baseR*1.6);
     const glow = asleep ? 0.3 : 0.65 + 0.35*energy;
     g.addColorStop(0, `rgba(123,233,255,${glow})`);
