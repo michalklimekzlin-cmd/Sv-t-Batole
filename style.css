@@ -82,3 +82,14 @@ canvas {
 canvas { position: fixed; left:0; top:0; width:100vw; height:100vh; display:block; }
 #canvas { z-index:0; }
 #canvasVafi { z-index:3; pointer-events:none; }
+
+/* aby rohové badge držely styl konzistentní */
+#badgeHuman, #badgeAI, #badgeWorld, #badgeGlyph {
+  font-size: 14px;
+  line-height: 1;
+  padding: 6px 10px;
+  border-radius: 12px;
+  background: rgba(0,0,0,.28);
+  color: #dff7ff;
+  backdrop-filter: blur(4px);
+}
