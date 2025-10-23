@@ -1,59 +1,33 @@
-/* Základ */
-* { box-sizing: border-box; }
-html, body { margin:0; padding:0; height:100%; background:#000; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+/* základ */
+html,body{margin:0;background:#000;color:#e8fff6;font-family:system-ui,-apple-system,Segoe UI,Roboto}
+canvas{display:block;width:100vw;height:50vh}
 
-#hud { margin-left: 12px; color:#aefcdf; }
-
-/* Canvasy */
-#canvas{
-  position:fixed; inset:0; display:block;
-  background:#000; z-index:1;
-}
-#canvasVafi{
-  position:fixed; inset:0; display:block;
-  pointer-events:none; z-index:3;
-}
-
-/* Aura VAF – jemný puls */
-.vaf-halo{
-  position: sticky; top: 0; z-index: 5;
-  display:flex; align-items:center; gap:10px;
-  padding:10px 16px; margin:0 0 8px 0;
-  background: rgba(20,20,28,0.55);
-  backdrop-filter: blur(6px) saturate(120%);
-  border-bottom: 1px solid #2a2a33;
-}
-.vaf-glow{
-  width:14px; height:14px; border-radius:50%;
-  box-shadow: 0 0 calc(10px + 30px * var(--vaf-energy, .5)) rgba(125, 221, 255, 0.45);
-  background: radial-gradient(circle at 50% 50%, rgba(125,221,255,.9), rgba(125,221,255,.2));
-  opacity: calc(.5 + .5 * var(--vaf-energy, .5));
-  transition: opacity .12s linear;
-}
-.vaf-label{ font-size:12px; color:#a3a3b2; letter-spacing:.06em }
-#hud {
+/* HUD */
+#hud{
+  position:sticky; top:0; z-index:5;
   display:flex; gap:.8rem; align-items:center;
+  padding:.75rem 1rem;
+  background:rgba(0,0,0,.6);
+  backdrop-filter:saturate(120%) blur(6px);
+  -webkit-backdrop-filter:saturate(120%) blur(6px);
 }
-#vafiDot {
+#vafiDot{
   width:.9rem; height:.9rem; border-radius:50%;
   display:inline-block; box-shadow:0 0 .6rem currentColor;
   animation:vafiPulse 2.2s ease-in-out infinite;
 }
-@keyframes vafiPulse {
-  0%,100% {transform:scale(1)} 
-  50% {transform:scale(1.15)}
-}
-#vafiStatus {
-  position:fixed; left:1rem; bottom:1rem; opacity:.8; font-size:.9rem;
-}
-.vafi-whisper {
+@keyframes vafiPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
+
+/* Šepoty (glyphy) + status */
+#vafiStatus{position:fixed; left:1rem; bottom:1rem; opacity:.8; font-size:.9rem; pointer-events:none}
+.vafi-whisper{
   position:fixed; right:1.2rem; bottom:4.6rem; opacity:0;
-  transform:translateY(8px) scale(.9);
-  transition:all .45s ease;
+  transform:translateY(8px) scale(.9); transition:all .45s ease;
   font-size:1.4rem; color:rgba(180,255,230,.92);
-  text-shadow:0 0 .6rem currentColor;
+  text-shadow:0 0 .6rem currentColor,0 0 .2rem currentColor;
   pointer-events:none;
 }
-.vafi-whisper.on {
-  opacity:1; transform:translateY(0) scale(1);
-}
+.vafi-whisper.on{opacity:1; transform:translateY(0) scale(1)}
+
+/* (volitelné) pokud gesta neberou kvůli canvům, dočasně odkomentuj: */
+/* #canvas, #canvasVafi { pointer-events:none; } */
