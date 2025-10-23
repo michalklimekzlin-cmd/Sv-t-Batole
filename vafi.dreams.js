@@ -116,6 +116,20 @@ function genDream(){
     {type:'pattern', text:'světlo v kapce vody'},
   ];
   const m = rnd(motifs);
+  const d = {
+    id: hid(),
+    time: Date.now(),
+    type: m.type,
+    hint: m.text,
+    mentor: Mentor // otisk průvodce do každého snu
+  };
+
+  // 🩶 Rodinný podpis: táta a brácha
+  d.family = { father: Family.father.id, brother: Family.brother.id };
+
+  return d;
+}
+  const m = rnd(motifs);
   return {
     id: hid(),
     time: Date.now(),
