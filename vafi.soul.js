@@ -1,8 +1,9 @@
 // vafi.soul.js (lite)
 // Duše – drží náladu/energii a posílá změny do světa.
-import { Flow }   from './vivere.flow.js';
-import { Memory } from './vafi.memory.js';
-
+// auto-importy s verzí z window.V (nastaví se v index.html)
+const V = window.V || 'dev';
+const { Flow }   = await import(`./vivere.flow.js?v=${V}`);
+const { Memory } = await import(`./vafi.memory.js?v=${V}`);
 const clamp = (x,a=0,b=1)=>Math.min(b,Math.max(a,x));
 let state = Memory.get(); // {stats:{mood,energy},...}
 let t = 0;
