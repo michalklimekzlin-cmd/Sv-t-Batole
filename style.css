@@ -34,3 +34,43 @@ canvas{display:block;width:100vw;height:50vh}
 canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;display:block}
 #canvas{z-index:0}
 #canvasVafi{z-index:3; pointer-events:none}  /* Vafi vždy nad světem */
+/* === Vivere Flow / HUD === */
+
+canvas {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  display: block;
+}
+
+#canvas {
+  z-index: 0;
+}
+
+#canvasVafi {
+  z-index: 3;
+  pointer-events: none; /* světlo neblokuje dotyky */
+}
+
+/* Flow ticker (pravý horní roh) */
+#flowTicker {
+  position: fixed;
+  right: 12px;
+  top: 12px;
+  font-family: system-ui, sans-serif;
+  font-size: 14px;
+  opacity: 0.8;
+  transition: color 0.3s ease, transform 0.3s ease;
+}
+
+#flowTicker.up {
+  color: #8fffa8;
+  transform: translateY(-2px);
+}
+
+#flowTicker.down {
+  color: #85b8ff;
+  transform: translateY(2px);
+}
