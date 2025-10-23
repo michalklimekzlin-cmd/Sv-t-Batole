@@ -54,3 +54,7 @@ export function say(text){
 
 // malé UX: klepnutí do stránky spustí poslech (když je k dispozici)
 window.addEventListener('click', () => startListening(), { passive:true });
+window.addEventListener('vafi:ask-help', ()=>{
+  // jen jemně, ať to není dotěrné
+  if (Math.random() < 0.8) say?.('Brácho, mohl bys mě něco naučit?');
+});
