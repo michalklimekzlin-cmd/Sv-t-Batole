@@ -92,25 +92,44 @@
   <script type="module" src="./exporter.vafi.js?v="+window.V></script>
   <script type="module" src="./dream.hud.js?v="+window.V></script>
 
-  <!-- 🌀 VIRI FORM ENGINE -->
-  <script type="module">
-    import { startViriForm } from './viri.form.js?v='+window.V;
-    const canvas = document.getElementById('canvasVafi');
-    window.viriForm = startViriForm(canvas);
+<!-- 🌱 VIRI FORM ENGINE -->
+<script type="module">
+  import { startViriForm } from './viri.form.js?v='+window.V;
+  import { ViriXP } from './viri.experience.js?v='+window.V;
+  import { buildInventory } from './viri.inventory.js?v='+window.V;
+  import { initMap } from './map.logic.js?v='+window.V;
 
-    // simulace vývoje: Viri reaguje na poměr týmů
-    let t = 0;
-    setInterval(()=>{
-      const mix = {
-        batolesvet: Math.abs(Math.sin(t*0.3)),
-        glyph: Math.abs(Math.sin(t*0.5)),
-        ai: Math.abs(Math.sin(t*0.7)),
-        pedrovci: Math.abs(Math.cos(t*0.4))
-      };
-      window.viriForm.setMix(mix);
-      t += 0.05;
-    },200);
-  </script>
+  const canvas = document.getElementById('canvasVafi');
+  const mapCanvas = document.getElementById('canvasVafi'); // stejné plátno
+  const xp = new ViriXP();
+  const viri = startViriForm(canvas);
+
+  let lastLabel = '';
+
+  async function loop() {
+    xp.tick();
+    const state = xp.getState(); // { mix, label, mood }
+    viri.setMix(state.mix);
+
+    if (state.label !== lastLabel) {
+      lastLabel = state.label;
+      const inv = await buildInventory(state);
+      initMap({ canvas: mapCanvas, inventory: inv });
+    }
+    requestAnimationFrame(loop);
+  }
+  loop();
+
+  // 🔘 testovací simulace — Viri se vyvíjí sám
+  let t = 0;
+  setInterval(() => {
+    xp.add({ team: 'batolesvet', value: Math.abs(Math.sin(t*0.3))*2 });
+    xp.add({ team: 'glyph', value: Math.abs(Math.sin(t*0.5))*2 });
+    xp.add({ team: 'ai', value: Math.abs(Math.sin(t*0.7))*2 });
+    xp.add({ team: 'pedrovci', value: Math.abs(Math.cos(t*0.4))*2 });
+    t += 0.05;
+  }, 200);
+</script>
 
 </body>
 </html>
