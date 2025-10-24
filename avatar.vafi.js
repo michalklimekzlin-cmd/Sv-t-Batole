@@ -1,4 +1,9 @@
 // avatar.vafi.js — Vafi s Morphix integration 💫
+// --- Viri napojení: energie z živého jádra ---
+let viriEnergy = 0.5; // výchozí klid
+window.addEventListener('viri:energy', (e) => {
+  if (e?.detail?.energy != null) viriEnergy = e.detail.energy;
+});
 
 if (window.__AVATAR_ACTIVE__) // avatar.vafi.js — Vafi s dýcháním, očima a barvami z configu
 import { State } from './state.core.js?v='+ (window.V||'dev');
