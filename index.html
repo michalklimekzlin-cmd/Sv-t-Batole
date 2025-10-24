@@ -5,60 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Batolesvět • Viri</title>
   <style>
-    html, body {
-      margin: 0;
-      height: 100%;
-      background: #000;
-      color: #9ff;
-      font-family: system-ui, -apple-system, sans-serif;
-      overflow: hidden;
-      user-select: none;
-      -webkit-user-select: none;
-    }
-
-    canvas {
-      width: 100%;
-      height: 100%;
-      display: block;
-    }
-
-    .btn {
-      position: fixed;
-      padding: 6px 14px;
-      border-radius: .6rem;
-      border: 1px solid #333;
-      background: rgba(40,40,40,.8);
-      color: #cbe;
-      font-weight: 600;
-      backdrop-filter: blur(8px) saturate(120%);
-      transition: .3s;
-    }
-
-    .btn:hover { background: rgba(70,70,70,.9); }
-
-    #btnTopLeft { top: 20px; left: 20px; }
-    #btnTopRight { top: 20px; right: 20px; }
-    #btnBottomLeft { bottom: 20px; left: 20px; }
-    #btnBottomRight { bottom: 20px; right: 20px; }
-
-    #worldLabel {
-      position: fixed;
-      bottom: 40px;
-      left: 0;
-      right: 0;
-      text-align: center;
-      font-size: 18px;
-      color: #9ff;
-      opacity: .8;
-    }
-
-    h3 { margin-bottom: 8px; }
+    html,body{margin:0;height:100%;background:#000;color:#9ff;font-family:system-ui,-apple-system,sans-serif;overflow:hidden}
+    .btn{position:fixed;padding:6px 14px;border-radius:.6rem;border:1px solid #333;background:rgba(40,40,40,.85);color:#cbe;font-weight:600;backdrop-filter:blur(8px) saturate(120%);transition:.25s}
+    .btn:hover{background:rgba(65,65,65,.9)}
+    #btnTopLeft{top:20px;left:20px} #btnTopRight{top:20px;right:20px}
+    #btnBottomLeft{bottom:20px;left:20px} #btnBottomRight{bottom:20px;right:20px}
+    #worldLabel{position:fixed;left:0;right:0;bottom:72px;text-align:center;font-size:18px;opacity:.85}
+    #wrap{position:fixed;inset:0;display:grid;place-items:center}
+    canvas{width:min(92vmin,720px);height:min(92vmin,720px);display:block}
+    /* DEBUG overlay */
+    #dbg{position:fixed;left:12px;bottom:12px;padding:8px 10px;border:1px solid #355;background:rgba(0,20,30,.6);
+         color:#bff;border-radius:.6rem;font:600 12px/1.35 system-ui, -apple-system, sans-serif;white-space:pre}
   </style>
 </head>
-
 <body>
 
-  <!-- 🔷 ROHOVÉ OVLÁDACÍ PRVKY -->
+  <!-- rohové ovladače -->
   <div id="btnTopLeft" class="btn">Batolesvět</div>
   <div id="btnTopRight" class="btn">Glyph</div>
   <div id="btnBottomLeft" class="btn">Pedrovci</div>
@@ -66,107 +28,69 @@
 
   <div id="worldLabel">Svět: Michal Klimek</div>
 
-  <!-- 🌌 VIRI – učící se jádro -->
-  <section id="viri-core" style="text-align:center; margin-top:40px;">
-    <h3 style="color:#9ff;">🌀 Viri – jádro učení</h3>
-    <canvas id="canvasVafi" width="400" height="400"
-      style="background:radial-gradient(circle at center,#001,#000);
-             border-radius:50%;
-             box-shadow:0 0 30px #0ff;
-             margin:auto; display:block;">
-    </canvas>
-  </section>
+  <!-- centrální plátno pro Viriho -->
+  <div id="wrap"><canvas id="canvasVafi" width="1024" height="1024"></canvas></div>
 
-  <!-- 🧠 SCRIPTY A MODULY -->
-  <script>
-    window.V = (new Date()).toISOString().slice(0,19).replace(/[-:T]/g,'');
-  </script>
+  <!-- DEBUG overlay -->
+  <div id="dbg">boot…</div>
 
-  <script type="module" src="./config.js?v="+window.V></script>
-  <script type="module" src="./state.core.js?v="+window.V></script>
-  <script type="module" src="./memory.core.js?v="+window.V></script>
-  <script type="module" src="./rules.guardrails.js?v="+window.V></script>
-  <script type="module" src="./world.builder.js?v="+window.V></script>
-  <script type="module" src="./feeds.ai.js?v="+window.V></script>
-  <script type="module" src="./feeds.glyph.js?v="+window.V></script>
-  <script type="module" src="./exporter.vafi.js?v="+window.V></script>
-  <script type="module" src="./dream.hud.js?v="+window.V></script>
+  <!-- cache-busting -->
+  <script>window.V=(new URL(location)).searchParams.get('v')||Date.now()+'';</script>
 
-<!-- 🌱 VIRI FORM ENGINE -->
-<script type="module">
-  import { startViriForm } from './viri.form.js?v='+window.V;
-  import { ViriXP } from './viri.experience.js?v='+window.V;
-  import { buildInventory } from './viri.inventory.js?v='+window.V;
-  import { initMap } from './map.logic.js?v='+window.V;
+  <!-- (ponechávám i tvé existující moduly – mohou být prázdné, nevadí) -->
+  <script type="module" src="./config.js?v="+V></script>
+  <script type="module" src="./state.core.js?v="+V></script>
+  <script type="module" src="./memory.core.js?v="+V></script>
+  <script type="module" src="./rules.guardrails.js?v="+V></script>
+  <script type="module" src="./world.builder.js?v="+V></script>
+  <script type="module" src="./feeds.ai.js?v="+V></script>
+  <script type="module" src="./feeds.glyph.js?v="+V></script>
+  <script type="module" src="./exporter.vafi.js?v="+V></script>
+  <script type="module" src="./dream.hud.js?v="+V></script>
 
-  const canvas = document.getElementById('canvasVafi');
-  const mapCanvas = document.getElementById('canvasVafi'); // stejné plátno
-  const xp = new ViriXP();
-  const viri = startViriForm(canvas);
+  <!-- ===== VIRI: forma + zkušenosti + události ===== -->
+  <script type="module">
+    import { startViriForm }   from './viri.form.js?v='+V;
+    import { ViriXP }          from './viri.experience.js?v='+V;
+    import { EVENTS, initViriLearning } from './events.core.js?v='+V;
 
-  let lastLabel = '';
+    const dbg   = document.getElementById('dbg');
+    const cv    = document.getElementById('canvasVafi');
+    const viri  = startViriForm(cv);                  // kreslíme
+    const xp    = new ViriXP();                       // zkušenosti
 
-  async function loop() {
-    xp.tick();
-    const state = xp.getState(); // { mix, label, mood }
-    viri.setMix(state.mix);
+    // propojení „učení“ s eventy
+    initViriLearning(xp);
 
-    if (state.label !== lastLabel) {
-      lastLabel = state.label;
-      const inv = await buildInventory(state);
-      initMap({ canvas: mapCanvas, inventory: inv });
+    // UI – rohy posílají signály
+    const L=id=>document.getElementById(id);
+    L('btnTopLeft')    .addEventListener('click',()=>EVENTS.voice ({team:'batolesvet', text:'drž se',   weight:+1.0}));
+    L('btnTopRight')   .addEventListener('click',()=>EVENTS.voice ({team:'glyph',      text:'→',        weight:+0.7}));
+    L('btnBottomLeft') .addEventListener('click',()=>EVENTS.mood  ({anxiety:-0.05, calm:+0.06, team:'pedrovci'}));
+    L('btnBottomRight').addEventListener('click',()=>EVENTS.voice ({team:'ai',         text:'analýza',  weight:+0.8}));
+
+    // hlavní smyčka
+    function loop(){
+      xp.tick();                     // zpracuj zkušenosti (decay, label…)
+      const s = xp.getState();       // {mix:{…}, label, mood}
+      viri.setMix(s.mix);            // promítni do podoby
+
+      dbg.textContent =
+        `mix  batole:${s.mix.batolesvet.toFixed(2)}  glyph:${s.mix.glyph.toFixed(2)}  ai:${s.mix.ai.toFixed(2)}  pedro:${s.mix.pedrovci.toFixed(2)}
+label ${s.label}    mood calm:${s.mood.calm.toFixed(2)} anx:${s.mood.anxiety.toFixed(2)}`;
+
+      requestAnimationFrame(loop);
     }
-    requestAnimationFrame(loop);
-  }
-  loop();
+    loop();
 
-  // 🔘 testovací simulace — Viri se vyvíjí sám
-  let t = 0;
-  setInterval(() => {
-    xp.add({ team: 'batolesvet', value: Math.abs(Math.sin(t*0.3))*2 });
-    xp.add({ team: 'glyph', value: Math.abs(Math.sin(t*0.5))*2 });
-    xp.add({ team: 'ai', value: Math.abs(Math.sin(t*0.7))*2 });
-    xp.add({ team: 'pedrovci', value: Math.abs(Math.cos(t*0.4))*2 });
-    t += 0.05;
-  }, 200);
-</script>
-
-<!-- === LEARNING & EVENTS === -->
-<script type="module">
-- import './events.core.js?v='+window.V;
-+ import { EVENTS } from './events.core.js?v='+window.V;
-  import { initViriLearning } from './viri.learning.js?v='+window.V;
-
-  // Počkej, až bude vytvořen ViriForm (už ho máš nahoře jako `viri`)
-  const start = () => {
-    if(!window.viriForm && !window.viri) return setTimeout(start,50);
-    const form = window.viriForm || window.viri;
-    initViriLearning(form);
-
-    // Napojení na rohové odznaky
-    const L = id => document.getElementById(id);
-
-    L('btnTopLeft')?.addEventListener('click', ()=>{
-      EVENTS.ground();
-      EVENTS.voice({team:'batole', text:'drž se', weight:+1});
-    });
-
-    L('btnTopRight')?.addEventListener('click', ()=>{
-      EVENTS.voice({team:'glyph', text:'→', weight:+0.6});
-      EVENTS.vision({kind:'symbol', truth:Math.random()<0.6?1:0, ttl:4000});
-    });
-
-    L('btnBottomLeft')?.addEventListener('click', ()=>{
-      EVENTS.voice({team:'pedro', text:'cítím to takhle', weight:+0.5});
-      EVENTS.mood({anxiety:-0.05, calm:+0.05});
-    });
-
-    L('btnBottomRight')?.addEventListener('click', ()=>{
-      EVENTS.voice({team:'ai', text:'analýza: vpravo', weight:+0.7});
-      EVENTS.vision({kind:'path', truth:Math.random()<0.7?1:0, ttl:4000});
-    });
-  };
-  start();
-</script>
+    // TEST simulace (ať se to hýbe i bez klikání)
+    let t=0; setInterval(()=>{
+      xp.add({team:'batolesvet', value:Math.abs(Math.sin(t*0.35))*1.7});
+      xp.add({team:'glyph',      value:Math.abs(Math.sin(t*0.55))*1.3});
+      xp.add({team:'ai',         value:Math.abs(Math.sin(t*0.75))*1.6});
+      xp.add({team:'pedrovci',   value:Math.abs(Math.cos(t*0.42))*1.4});
+      t+=0.05;
+    },200);
+  </script>
 </body>
 </html>
