@@ -84,6 +84,34 @@
 
     // UI – rohy posílají signály
     const L=id=>document.getElementById(id);
+    // === Rady týmů ===
+const adviceBox = document.createElement('div');
+adviceBox.id = 'adviceBox';
+adviceBox.style.cssText = `
+  position:fixed;
+  bottom:100px; left:50%;
+  transform:translateX(-50%);
+  background:rgba(10,20,30,.8);
+  color:#cfe;
+  border:1px solid #358;
+  border-radius:1rem;
+  padding:12px 18px;
+  font:500 15px/1.4 system-ui,-apple-system,sans-serif;
+  backdrop-filter:blur(8px) saturate(160%);
+  text-align:center;
+  opacity:0;
+  transition:opacity .5s;
+  pointer-events:none;
+  max-width:85%;
+`;
+document.body.appendChild(adviceBox);
+
+function showAdvice(text){
+  adviceBox.textContent = text;
+  adviceBox.style.opacity = 1;
+  clearTimeout(showAdvice._timer);
+  showAdvice._timer = setTimeout(()=>adviceBox.style.opacity=0,4000);
+}
     L('btnTopLeft')    .addEventListener('click',()=>EVENTS.voice ({team:'batolesvet', text:'drž se',   weight:+1.0}));
     L('btnTopRight')   .addEventListener('click',()=>EVENTS.voice ({team:'glyph',      text:'→',        weight:+0.7}));
     L('btnBottomLeft') .addEventListener('click',()=>EVENTS.mood  ({anxiety:-0.05, calm:+0.06, team:'pedrovci'}));
