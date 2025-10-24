@@ -1,97 +1,40 @@
-// map.logic.js — „živé dýchání“ orbu podle energie Viriho
-// -------------------------------------------------------
-// Co dělá:
-// 1) vytvoří neklikací překryvný canvas s jemnou aurou
-// 2) dýchání (pulz) = funkce času a Viri.energy (0..1)
-// 3) poslouchá na custom eventu `viri:energy` a hned upraví rytmus
+// map.logic.js – jednoduché demo rozmísťování assetů kolem Viriho
+// API: initMap({canvas, inventory})
 
-(() => {
-  // --- canvas aura (překryv) ---
-  const aura = document.createElement('canvas');
-  Object.assign(aura.style, {
-    position: 'fixed',
-    inset: 0,
-    pointerEvents: 'none',
-    zIndex: 0   // nechává UI nad sebou; orb pluje „pod“ aurou, ale vizuálně to sedí
-  });
-  aura.id = 'auraCanvas';
-  document.body.appendChild(aura);
-  const ctx = aura.getContext('2d');
+export function initMap({ canvas, inventory }) {
+  const ctx = canvas.getContext('2d');
+  const items = [];
+  const W = () => canvas.clientWidth || canvas.width;
+  const H = () => canvas.clientHeight || canvas.height;
 
-  // --- stav ---
-  let energy = clamp(Number(window?.Viri?.energy) || 0.75, 0, 1); // výchozí „klid“
-  let t0 = performance.now();
-  let W = 0, H = 0, CX = 0, CY = 0, baseR = 0;
-
-  function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
-
-  function resize(){
-    const dpr = Math.max(1, window.devicePixelRatio || 1);
-    W = aura.width  = Math.floor(innerWidth  * dpr);
-    H = aura.height = Math.floor(innerHeight * dpr);
-    aura.style.width  = innerWidth + 'px';
-    aura.style.height = innerHeight + 'px';
-    CX = W * 0.5;
-    // orb bývá cca pod středem; jemně posuneme ~ 42 % výšky
-    CY = H * 0.42;
-    baseR = Math.min(W, H) * 0.18;
+  function drop(imgBitmap, radius, angle, drift=0.15) {
+    const cx = W()/2, cy = H()/2;
+    const x = cx + Math.cos(angle)*radius;
+    const y = cy + Math.sin(angle)*radius;
+    items.push({ img: imgBitmap, x, y, a: angle, r: radius, t: Math.random()*1000, drift });
   }
-  addEventListener('resize', resize, { passive:true });
-  resize();
 
-  // --- naslouchání na energii z Viriho ---
-  // můžeš volat window.dispatchEvent(new CustomEvent('viri:energy', {detail:{energy:0.6}}))
-  addEventListener('viri:energy', (ev) => {
-    if (ev?.detail?.energy != null) {
-      energy = clamp(Number(ev.detail.energy), 0, 1);
+  // rozhoď, pokud jsou k dispozici
+  const baseR = Math.min(W(),H())*0.28;
+  if (inventory.images.shard) drop(inventory.images.shard, baseR, 0.2);
+  if (inventory.images.emo)   drop(inventory.images.emo,   baseR*1.15, -1.1, 0.12);
+  if (inventory.images.glyph) drop(inventory.images.glyph, baseR*0.9,  2.3,  0.10);
+
+  function draw(now){
+    ctx.clearRect(0,0,W(),H());
+    // položky jemně krouží kolem
+    for (const it of items){
+      it.t += 16; // ~fps
+      const wobble = Math.sin(it.t*0.002) * it.drift * it.r;
+      const x = W()/2 + Math.cos(it.a)*it.r + Math.cos(it.t*0.0017)*wobble;
+      const y = H()/2 + Math.sin(it.a)*it.r + Math.sin(it.t*0.0013)*wobble;
+      const s = 0.9 + 0.1*Math.sin(it.t*0.001+it.a);
+      const w = it.img.width*s, h = it.img.height*s;
+      ctx.drawImage(it.img, x-w/2, y-h/2, w, h);
     }
-  });
-
-  // --- jádro animace ---
-  function loop(ts){
-    const dt = (ts - t0) / 1000; // sekundy
-    t0 = ts;
-
-    // „dech“: rychlost a hloubka závisí na energii
-    // perioda  = 5s (nízká energie) -> 2s (vysoká energie)
-    const period = 5 - 3 * energy;
-    const w = (Math.PI * 2) / Math.max(0.001, period);
-    // amplituda poloměru 3–7 % podle energie
-    const amp = 0.03 + 0.04 * energy;
-    const breath = Math.sin(performance.now() * 0.001 * w) * amp;
-
-    // vyčistit
-    ctx.clearRect(0,0,W,H);
-
-    // aura – jemný více-stupňový radiální gradient
-    const r = baseR * (1 + breath);
-    const grad = ctx.createRadialGradient(CX, CY, r*0.15, CX, CY, r*1.6);
-    // barvy: vnitřek lehce jasnější, vnější temný do ztracena
-    const coreAlpha  = 0.25 + 0.35 * energy; // 0.25–0.60
-    const ringAlpha  = 0.10 + 0.25 * energy; // 0.10–0.35
-    grad.addColorStop(0.00, `rgba(123,233,205,${coreAlpha})`);
-    grad.addColorStop(0.35, `rgba( 40,120,110,${ringAlpha})`);
-    grad.addColorStop(1.00, `rgba(  0,  0,  0, 0)`);
-
-    ctx.fillStyle = grad;
-    ctx.beginPath();
-    ctx.arc(CX, CY, r*1.6, 0, Math.PI*2);
-    ctx.fill();
-
-    requestAnimationFrame(loop);
+    requestAnimationFrame(draw);
   }
-  requestAnimationFrame(loop);
+  requestAnimationFrame(draw);
 
-  // --- volitelný ping: drobné zvýšení energie na chvilku ---
-  addEventListener('viri:ping', () => {
-    // krátký „nádech“ po pingnutí
-    energy = clamp(energy + 0.08, 0, 1);
-    setTimeout(() => energy = clamp(energy - 0.06, 0, 1), 1200);
-  });
-
-  // Pomocná API pro ostatní skripty (nepovinné)
-  window.ViriAura = {
-    setEnergy: (e) => { energy = clamp(Number(e)||0, 0, 1); },
-    getEnergy: () => energy
-  };
-})();
+  return { drop };
+}
