@@ -1,112 +1,116 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="cs">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Viri – Inventář Mysli</title>
-<style>
-  html,body {
-    margin:0; padding:0; height:100%; background:black; overflow:hidden;
-    color:#aef; font-family:Arial, sans-serif; user-select:none;
-  }
-  #canvas {
-    position:fixed; top:0; left:0; width:100%; height:100%;
-    background:black; display:block;
-  }
-  .corner {
-    position:fixed; padding:6px 12px; border-radius:8px;
-    background:rgba(40,40,40,0.8); color:#c9b7ff; font-weight:bold;
-    border:1px solid rgba(255,255,255,0.1);
-  }
-  #btnBatole { top:20px; left:20px; }
-  #btnGlyph { top:20px; right:20px; }
-  #btnPiko { bottom:20px; left:20px; }
-  #btnAI { bottom:20px; right:20px; }
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Batolesvět • Viri</title>
+  <style>
+    html, body {
+      margin: 0;
+      height: 100%;
+      background: #000;
+      color: #9ff;
+      font-family: system-ui, -apple-system, sans-serif;
+      overflow: hidden;
+      user-select: none;
+      -webkit-user-select: none;
+    }
 
-  #footer {
-    position:fixed; bottom:50px; left:0; width:100%; text-align:center;
-    font-size:16px; color:#bff;
-  }
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
 
-  #panel {
-    position:fixed; bottom:0; left:0; width:100%;
-    background:rgba(0,0,0,0.7); text-align:center; padding:8px;
-  }
-  #panel button {
-    margin:4px; padding:6px 12px;
-    background:#222; color:#bdf; border:1px solid #444; border-radius:6px;
-  }
-</style>
+    .btn {
+      position: fixed;
+      padding: 6px 14px;
+      border-radius: .6rem;
+      border: 1px solid #333;
+      background: rgba(40,40,40,.8);
+      color: #cbe;
+      font-weight: 600;
+      backdrop-filter: blur(8px) saturate(120%);
+      transition: .3s;
+    }
+
+    .btn:hover { background: rgba(70,70,70,.9); }
+
+    #btnTopLeft { top: 20px; left: 20px; }
+    #btnTopRight { top: 20px; right: 20px; }
+    #btnBottomLeft { bottom: 20px; left: 20px; }
+    #btnBottomRight { bottom: 20px; right: 20px; }
+
+    #worldLabel {
+      position: fixed;
+      bottom: 40px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 18px;
+      color: #9ff;
+      opacity: .8;
+    }
+
+    h3 { margin-bottom: 8px; }
+  </style>
 </head>
 
 <body>
-<canvas id="canvas"></canvas>
 
-<button id="btnBatole" class="corner">Batolesvět</button>
-<button id="btnGlyph" class="corner">Glyph</button>
-<button id="btnPiko" class="corner">Pedrovci</button>
-<button id="btnAI" class="corner">AI</button>
+  <!-- 🔷 ROHOVÉ OVLÁDACÍ PRVKY -->
+  <div id="btnTopLeft" class="btn">Batolesvět</div>
+  <div id="btnTopRight" class="btn">Glyph</div>
+  <div id="btnBottomLeft" class="btn">Pedrovci</div>
+  <div id="btnBottomRight" class="btn">AI</div>
 
-<div id="footer">Svět: Michal Klimek</div>
+  <div id="worldLabel">Svět: Michal Klimek</div>
 
-<div id="panel">
-  <button onclick="VAFI.pedrovci.emotion('joy',0.9,'smích')">🙂 Radost</button>
-  <button onclick="VAFI.pedrovci.emotion('sad',0.2,'smutek')">😢 Smutek</button>
-  <button onclick="VAFI.glyph.saySymbol('(*•‿•)','pozdrav')">💬 Glyph</button>
-  <button onclick="VAFI.ai.codeHint('if love>fear: create()')">🧠 AI kód</button>
-  <button onclick="VAFI.exporter.exportJSON()">📦 Export</button>
-</div>
+  <!-- 🌌 VIRI – učící se jádro -->
+  <section id="viri-core" style="text-align:center; margin-top:40px;">
+    <h3 style="color:#9ff;">🌀 Viri – jádro učení</h3>
+    <canvas id="canvasVafi" width="400" height="400"
+      style="background:radial-gradient(circle at center,#001,#000);
+             border-radius:50%;
+             box-shadow:0 0 30px #0ff;
+             margin:auto; display:block;">
+    </canvas>
+  </section>
 
-<script>
-window.V = Math.floor(Math.random()*99999); // cache-bust
-</script>
+  <!-- 🧠 SCRIPTY A MODULY -->
+  <script>
+    window.V = (new Date()).toISOString().slice(0,19).replace(/[-:T]/g,'');
+  </script>
 
-<!-- === CORE === -->
-<script type="module" src="./memory.core.js?v="+V></script>
-<script type="module" src="./rules.guardrails.js?v="+V></script>
+  <script type="module" src="./config.js?v="+window.V></script>
+  <script type="module" src="./state.core.js?v="+window.V></script>
+  <script type="module" src="./memory.core.js?v="+window.V></script>
+  <script type="module" src="./rules.guardrails.js?v="+window.V></script>
+  <script type="module" src="./world.builder.js?v="+window.V></script>
+  <script type="module" src="./feeds.ai.js?v="+window.V></script>
+  <script type="module" src="./feeds.glyph.js?v="+window.V></script>
+  <script type="module" src="./exporter.vafi.js?v="+window.V></script>
+  <script type="module" src="./dream.hud.js?v="+window.V></script>
 
-<!-- === MIND === -->
-<script type="module" src="./viri.mind.js?v="+V></script>
+  <!-- 🌀 VIRI FORM ENGINE -->
+  <script type="module">
+    import { startViriForm } from './viri.form.js?v='+window.V;
+    const canvas = document.getElementById('canvasVafi');
+    window.viriForm = startViriForm(canvas);
 
-<!-- === FEEDS === -->
-<script type="module" src="./feeds.pedrovci.js?v="+V></script>
-<script type="module" src="./feeds.engine.js?v="+V></script>
-<script type="module" src="./feeds.ai.js?v="+V></script>
-<script type="module" src="./feeds.glyph.js?v="+V></script>
-
-<!-- === BUILDER + EXPORT === -->
-<script type="module" src="./world.builder.js?v="+V></script>
-<script type="module" src="./exporter.vaf2.js?v="+V></script>
-<script type="module" src="./dream.hud.js?v="+V></script>
-
-<!-- === CANVAS === -->
-<script>
-const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d');
-let w, h; 
-function resize(){ w=canvas.width=innerWidth; h=canvas.height=innerHeight; }
-addEventListener('resize',resize); resize();
-
-function draw(){
-  ctx.clearRect(0,0,w,h);
-  const r = 60 + 10*Math.sin(Date.now()/500);
-  const cx = w/2, cy = h/2;
-  const g = ctx.createRadialGradient(cx,cy,10,cx,cy,r);
-  g.addColorStop(0,'rgba(150,255,220,0.8)');
-  g.addColorStop(1,'rgba(0,0,0,0)');
-  ctx.fillStyle=g; ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fill();
-
-  // text info
-  const s = VAFI?.viri?.snapshot?.();
-  if(s){
-    ctx.fillStyle="#aef";
-    ctx.font="14px monospace";
-    ctx.fillText(`Mood:${s.mood}  Energy:${s.energy.toFixed(2)}  Dreams:${s.dreams}`, 20, h-20);
-  }
-  requestAnimationFrame(draw);
-}
-draw();
-</script>
+    // simulace vývoje: Viri reaguje na poměr týmů
+    let t = 0;
+    setInterval(()=>{
+      const mix = {
+        batolesvet: Math.abs(Math.sin(t*0.3)),
+        glyph: Math.abs(Math.sin(t*0.5)),
+        ai: Math.abs(Math.sin(t*0.7)),
+        pedrovci: Math.abs(Math.cos(t*0.4))
+      };
+      window.viriForm.setMix(mix);
+      t += 0.05;
+    },200);
+  </script>
 
 </body>
 </html>
