@@ -2,26 +2,26 @@
 <html lang="cs">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Batolesvět • Viri</title>
 
   <style>
-    html,body {
+    html,body{
       margin:0;
       height:100%;
       background:#000;
       color:#bff;
-      font:16px/1.5 system-ui,-apple-system,sans-serif;
+      font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto;
       overflow:hidden;
       user-select:none;
       -webkit-user-select:none;
     }
-    canvas {
+    canvas{
       width:100%;
       height:100%;
       display:block;
     }
-    .btn {
+    .btn{
       position:fixed;
       padding:6px 14px;
       border-radius:.6rem;
@@ -29,88 +29,51 @@
       background:rgba(40,40,40,.8);
       color:#cbe;
       backdrop-filter:blur(8px) saturate(120%);
-      font:600 14px system-ui,-apple-system,sans-serif;
+      font:600 14px system-ui,-apple-system,Segoe UI,Roboto;
       transition:.3s;
+      cursor:pointer;
+      z-index:10;
     }
-    .btn:hover { background:rgba(80,80,80,.9); }
-    #btnTopLeft    { top:20px; left:20px; }
-    #btnTopRight   { top:20px; right:20px; }
-    #btnBottomLeft { bottom:20px; left:20px; }
-    #btnBottomRight{ bottom:20px; right:20px; }
-    #worldLabel {
-      position:fixed;
-      bottom:80px;
-      width:100%;
-      text-align:center;
-      font-weight:600;
-      color:#aef;
+    .btn:hover{
+      background:rgba(60,60,60,.9);
+      color:#fff;
     }
   </style>
+
+  <script>
+    // jednotná verze pro cache-busting
+    window.V = (new Date()).toISOString().slice(0,19).replace(/\D/g,'');
+  </script>
 </head>
 
 <body>
+  <!-- Tlačítka v rozích -->
+  <button class="btn" style="top:20px;left:20px;">Batolesvět</button>
+  <button class="btn" style="top:20px;right:20px;">Glyph</button>
+  <button id="pingBtn" class="btn" style="bottom:20px;right:20px;">Ping Viri</button>
+  <button class="btn" style="bottom:20px;left:20px;">Piko</button>
+
+  <!-- Popisek uprostřed -->
+  <div id="worldLabel"
+       style="position:fixed;left:50%;transform:translateX(-50%);
+              bottom:100px;color:#bff;opacity:.9;">
+    Svět: Michal Klimek
+  </div>
+
+  <!-- Canvas pro Vafiho (tělo Viriho) -->
   <canvas id="canvasVafi"></canvas>
 
-  <div id="worldLabel">Svět: Michal Klimek</div>
-  <div id="btnTopLeft" class="btn">Batolesvět</div>
-  <div id="btnTopRight" class="btn">Glyph</div>
-  <div id="btnBottomLeft" class="btn">Piko</div>
-  <div id="btnBottomRight" class="btn">Orbit</div>
-
-  <!-- 🌊 Verze pro cache-busting -->
-  <script>
-    window.V = (new Date()).toISOString().slice(0,19).replace(/[-:T]/g,'');
-  </script>
-
-  <!-- 💎 Duše + Avatar -->
-  <script type="module" src="./vafi.soul.js?v="+window.V></script>
-  <script type="module" src="./config.js?v="+window.V></script>
-  <script type="module" src="./state.core.js?v="+window.V></script>
+  <!-- Moduly -->
   <script type="module" src="./avatar.vafi.js?v="+window.V></script>
-  <script type="module" src="./vafi.dreams.js?v="+window.V></script>
+  <script src="./viri.guardian.js?v="+window.V></script>
 
-  <!-- 🌀 Viri (živé jádro) -->
-  <script type="module" src="./viri.guardian.js?v="+window.V></script>
-
-  <!-- 🌿 Míza (zásobárna života) -->
-  <script type="module" src="./miza.core.js?v="+window.V></script>
-
-  <!-- 🔊 Zvuk / Hlas -->
-  <script type="module" src="./vafi.audio.js?v="+window.V></script>
-  <script type="module" src="./voice.react.js?v="+window.V></script>
-
-  <!-- 🌍 Svět Batolesvět (spouštěč scény) -->
-  <script type="module" src="./world.batolesvet.js?v="+window.V></script>
-
-  <!-- ⚙️ Aplikace -->
-  <script type="module" src="./mk.core.js?v="+window.V></script>
-  <script type="module" src="./app.js?v="+window.V></script>
-  <script type="module" src="./notify.local.js?v="+window.V></script>
+  <!-- Interakce UI -->
+  <script>
+    const pingBtn = document.getElementById('pingBtn');
+    pingBtn.addEventListener('click', ()=>{
+      window.dispatchEvent(new CustomEvent('viri:ping'));
+      alert('✅ Ping poslán Viri-mu!');
+    });
+  </script>
 </body>
-<!-- 🧠 TEST VIRI BUTTON -->
-<script>
-  window.addEventListener('DOMContentLoaded', () => {
-    const btn = document.createElement('button');
-    btn.textContent = 'Ping Viri';
-    btn.style.position = 'fixed';
-    btn.style.bottom = '20px';
-    btn.style.left = '50%';
-    btn.style.transform = 'translateX(-50%)';
-    btn.style.padding = '6px 16px';
-    btn.style.borderRadius = '.5rem';
-    btn.style.background = 'rgba(80,150,255,0.2)';
-    btn.style.color = '#bff';
-    btn.style.border = '1px solid #357';
-    btn.style.font = '600 14px system-ui';
-    btn.onclick = () => {
-      if (window.Viri?.ping) {
-        window.Viri.ping('žiju?');
-        alert('✅ Ping poslán Viri-mu!');
-      } else {
-        alert('⚠️ Viri zatím nereaguje.');
-      }
-    };
-    document.body.appendChild(btn);
-  });
-</script>
 </html>
