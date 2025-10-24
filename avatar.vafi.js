@@ -1,3 +1,9 @@
+if (window.__VAFI_ORB_ACTIVE__) {
+  console.warn('Vafi orb už běží – druhé spuštění odmítnuto.');
+  // rychlý exit modulu
+} else {
+  window.__VAFI_ORB_ACTIVE__ = true;
+}
 // avatar.vafi.js — pulzující orb (autostart)
 (function () {
   const canvas = document.getElementById('canvasVafi');
