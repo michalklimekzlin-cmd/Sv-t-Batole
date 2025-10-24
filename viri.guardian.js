@@ -1,31 +1,39 @@
-// viri.guardian.js — živé jádro
-(function(){
+// viri.guardian.js — jednoduché „živé jádro“
+(function () {
   class ViriGuardian {
     constructor(){
       this.birth = Date.now();
-      this.state = { mood: "calm", energy: 1.0, notes: [] };
-      console.log("🟢 Viri boot:", new Date(this.birth).toLocaleTimeString());
-      this.loop();
+      this.state = { mood: 'calm', energy: 1.0, notes: [] };
+      console.log('🟢 Viri boot:', new Date(this.birth).toISOString());
     }
 
-    ping(msg="ahoj"){
-      const out = `Viri: ${msg} • mood=${this.state.mood}`;
+    ping(msg='ahoj'){
+      const out = `Viri: ${msg} • mood=${this.state.mood} • energy=${this.state.energy.toFixed(2)}`;
       console.log(out);
       return out;
     }
 
-    loop(){
-      setInterval(()=>{
-        this.state.energy = Math.max(0, Math.min(1, this.state.energy - 0.001 + Math.random()*0.002));
-      }, 100);
+    pulse(world={}){
+      this.state.energy = Math.min(1, this.state.energy + 0.001);
+      if (Math.random() < 0.002) this.reflect(world);
+    }
+
+    reflect(world={}){
+      const thought = {
+        t: Date.now(),
+        feel: this.state.mood,
+        world: { ...world, rnd: Math.random() }
+      };
+      this.state.notes.push(thought);
+      try { localStorage.setItem('VIRI_MEMORY', JSON.stringify(this.state.notes.slice(-100))); }
+      catch(e){ /* ignore quota */ }
+      console.log('💭 Viri šepotá:', thought);
     }
   }
 
+  // export do window
   window.Viri = new ViriGuardian();
 
-  // reaguje na událost z tlačítka
-  window.addEventListener("viri:ping", ()=>{
-    const out = window.Viri.ping("ping!");
-    console.log(out);
-  });
+  // lehký tik (můžeš vypnout)
+  setInterval(()=> window.Viri.pulse({tick:true}), 1000);
 })();
