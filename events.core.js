@@ -1,6 +1,4 @@
-// events.core.js
-// Jednoduchá centrální "sběrnice" událostí pro komunikaci mezi týmy a Virim
-
+// events.core.js — centrální sběrnice událostí
 export const Bus = new EventTarget();
 
 export const EVENTS = {
@@ -21,6 +19,6 @@ export const EVENTS = {
   }
 };
 
-// Přístup i z konzole
+// přístup i z konzole
 window.EVENTS = EVENTS;
 window.Bus = Bus;
