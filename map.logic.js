@@ -1,6 +1,4 @@
-// map.logic.js – jednoduché demo rozmísťování assetů kolem Viriho
-// API: initMap({canvas, inventory})
-
+// map.logic.js — jednoduché rozmístění inventáře kolem Viriho
 export function initMap({ canvas, inventory }) {
   const ctx = canvas.getContext('2d');
   const items = [];
@@ -14,7 +12,6 @@ export function initMap({ canvas, inventory }) {
     items.push({ img: imgBitmap, x, y, a: angle, r: radius, t: Math.random()*1000, drift });
   }
 
-  // rozhoď, pokud jsou k dispozici
   const baseR = Math.min(W(),H())*0.28;
   if (inventory.images.shard) drop(inventory.images.shard, baseR, 0.2);
   if (inventory.images.emo)   drop(inventory.images.emo,   baseR*1.15, -1.1, 0.12);
@@ -22,9 +19,8 @@ export function initMap({ canvas, inventory }) {
 
   function draw(now){
     ctx.clearRect(0,0,W(),H());
-    // položky jemně krouží kolem
     for (const it of items){
-      it.t += 16; // ~fps
+      it.t += 16;
       const wobble = Math.sin(it.t*0.002) * it.drift * it.r;
       const x = W()/2 + Math.cos(it.a)*it.r + Math.cos(it.t*0.0017)*wobble;
       const y = H()/2 + Math.sin(it.a)*it.r + Math.sin(it.t*0.0013)*wobble;
