@@ -51,3 +51,26 @@
   window.Viri = viri;
   document.dispatchEvent(new CustomEvent("viri:ready", { detail: { when: viri.birth } }));
 })();
+// aktivace Viriho jádra
+window.Viri = new ViriGuardian();
+
+// 🔄 Automatická obnova energie (dýchání + událost pro map.logic.js)
+setInterval(() => {
+  if (typeof Viri?.state?.energy === 'number') {
+    // pomalé „zklidňování“ energie do rovnováhy
+    Viri.state.energy = Math.max(0, Math.min(1, Viri.state.energy * 0.995 + 0.005));
+  }
+
+  // pošli událost, aby orb dýchal podle aktuální energie
+  window.dispatchEvent(
+    new CustomEvent('viri:energy', { detail: { energy: Viri.state.energy } })
+  );
+}, 1200);
+
+// 💫 reakce na ping – lehce zvýší energii a pošle event
+window.addEventListener('viri:ping', () => {
+  Viri.state.energy = Math.min(1, Viri.state.energy + 0.08);
+  window.dispatchEvent(
+    new CustomEvent('viri:energy', { detail: { energy: Viri.state.energy } })
+  );
+});
