@@ -1,36 +1,16 @@
-// map.logic.js — jednoduché rozmístění inventáře kolem Viriho
-export function initMap({ canvas, inventory }) {
+// map.logic.js — do budoucna minimapa / tipy; zatím jen jemná aura textu
+export function initMap({ canvas, inventory }){
   const ctx = canvas.getContext('2d');
-  const items = [];
-  const W = () => canvas.clientWidth || canvas.width;
-  const H = () => canvas.clientHeight || canvas.height;
+  const w = canvas.width, h = canvas.height;
 
-  function drop(imgBitmap, radius, angle, drift=0.15) {
-    const cx = W()/2, cy = H()/2;
-    const x = cx + Math.cos(angle)*radius;
-    const y = cy + Math.sin(angle)*radius;
-    items.push({ img: imgBitmap, x, y, a: angle, r: radius, t: Math.random()*1000, drift });
-  }
-
-  const baseR = Math.min(W(),H())*0.28;
-  if (inventory.images.shard) drop(inventory.images.shard, baseR, 0.2);
-  if (inventory.images.emo)   drop(inventory.images.emo,   baseR*1.15, -1.1, 0.12);
-  if (inventory.images.glyph) drop(inventory.images.glyph, baseR*0.9,  2.3,  0.10);
-
-  function draw(now){
-    ctx.clearRect(0,0,W(),H());
-    for (const it of items){
-      it.t += 16;
-      const wobble = Math.sin(it.t*0.002) * it.drift * it.r;
-      const x = W()/2 + Math.cos(it.a)*it.r + Math.cos(it.t*0.0017)*wobble;
-      const y = H()/2 + Math.sin(it.a)*it.r + Math.sin(it.t*0.0013)*wobble;
-      const s = 0.9 + 0.1*Math.sin(it.t*0.001+it.a);
-      const w = it.img.width*s, h = it.img.height*s;
-      ctx.drawImage(it.img, x-w/2, y-h/2, w, h);
-    }
-    requestAnimationFrame(draw);
-  }
-  requestAnimationFrame(draw);
-
-  return { drop };
+  // jemný caption pod koulí (neruší render)
+  const msg = `• ${inventory.label} • ${inventory.topTeam.name}`;
+  ctx.save();
+  ctx.font = '600 14px system-ui,-apple-system,sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillStyle = 'rgba(160,240,235,.7)';
+  ctx.shadowColor = 'rgba(0,255,230,.35)';
+  ctx.shadowBlur = 8;
+  ctx.fillText(msg, w/2, h*0.62);
+  ctx.restore();
 }
