@@ -33,7 +33,27 @@
 
   <!-- DEBUG overlay -->
   <div id="dbg">boot…</div>
-
+<!-- 🌤️ PANEL RAD -->
+<div id="adviceBox"
+  style="
+    position:fixed;
+    bottom:100px; left:50%;
+    transform:translateX(-50%);
+    background:rgba(10,20,30,.8);
+    color:#cfe;
+    border:1px solid #358;
+    border-radius:1rem;
+    padding:12px 18px;
+    font:500 15px/1.4 system-ui, -apple-system, sans-serif;
+    backdrop-filter:blur(8px) saturate(160%);
+    text-align:center;
+    opacity:0;
+    transition:opacity .5s;
+    pointer-events:none;
+    max-width:85%;
+  ">
+  ✨ <span id="adviceText">...</span>
+</div>
   <!-- cache-busting -->
   <script>window.V=(new URL(location)).searchParams.get('v')||Date.now()+'';</script>
 
