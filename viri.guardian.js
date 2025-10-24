@@ -1,39 +1,39 @@
-// viri.guardian.js — jednoduché „živé jádro“
-(function () {
-  class ViriGuardian {
-    constructor(){
-      this.birth = Date.now();
-      this.state = { mood: 'calm', energy: 1.0, notes: [] };
-      console.log('🟢 Viri boot:', new Date(this.birth).toISOString());
-    }
+// viri.guardian.js — Viri jako živé jádro světa
+import { Memory }  from './memory.core.js';
+import { Builder } from './world.builder.js';
 
-    ping(msg='ahoj'){
-      const out = `Viri: ${msg} • mood=${this.state.mood} • energy=${this.state.energy.toFixed(2)}`;
-      console.log(out);
-      return out;
-    }
+class ViriGuardian {
+  constructor(){
+    this.birth = Date.now();
+    this.state = { mood:'calm', energy:1.0, pings:0 };
+    console.log('🟢 Viri boot', new Date(this.birth).toLocaleString());
 
-    pulse(world={}){
-      this.state.energy = Math.min(1, this.state.energy + 0.001);
-      if (Math.random() < 0.002) this.reflect(world);
-    }
-
-    reflect(world={}){
-      const thought = {
-        t: Date.now(),
-        feel: this.state.mood,
-        world: { ...world, rnd: Math.random() }
-      };
-      this.state.notes.push(thought);
-      try { localStorage.setItem('VIRI_MEMORY', JSON.stringify(this.state.notes.slice(-100))); }
-      catch(e){ /* ignore quota */ }
-      console.log('💭 Viri šepotá:', thought);
-    }
+    // auto-start world builderu (můžeš vypnout)
+    Builder.start();
   }
 
-  // export do window
-  window.Viri = new ViriGuardian();
+  ping(msg='ahoj'){
+    this.state.pings++;
+    const out = `Viri: ${msg} • mood=${this.state.mood} • p=${this.state.pings}`;
+    Memory.write('ping', { msg, pings:this.state.pings });
+    return out;
+  }
 
-  // lehký tik (můžeš vypnout)
-  setInterval(()=> window.Viri.pulse({tick:true}), 1000);
-})();
+  pulse(world={}){
+    // drobná údržba energie
+    this.state.energy = Math.max(0, Math.min(1, this.state.energy + 0.01));
+    if (Math.random() < 0.05) this.reflect(world);
+  }
+
+  reflect(world={}){
+    const thought = {
+      t: Date.now(),
+      feel: this.state.mood,
+      worldSample: Memory.readLog({limit:5})
+    };
+    Memory.write('thought', thought);
+  }
+}
+
+export const Viri = new ViriGuardian();
+window.Viri = Viri;
