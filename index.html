@@ -131,5 +131,41 @@
   }, 200);
 </script>
 
+<!-- === LEARNING & EVENTS === -->
+<script type="module">
+  import './events.core.js?v='+window.V;
+  import { initViriLearning } from './viri.learning.js?v='+window.V;
+
+  // Počkej, až bude vytvořen ViriForm (už ho máš nahoře jako `viri`)
+  const start = () => {
+    if(!window.viriForm && !window.viri) return setTimeout(start,50);
+    const form = window.viriForm || window.viri;
+    initViriLearning(form);
+
+    // Napojení na rohové odznaky
+    const L = id => document.getElementById(id);
+
+    L('btnTopLeft')?.addEventListener('click', ()=>{
+      EVENTS.ground();
+      EVENTS.voice({team:'batole', text:'drž se', weight:+1});
+    });
+
+    L('btnTopRight')?.addEventListener('click', ()=>{
+      EVENTS.voice({team:'glyph', text:'→', weight:+0.6});
+      EVENTS.vision({kind:'symbol', truth:Math.random()<0.6?1:0, ttl:4000});
+    });
+
+    L('btnBottomLeft')?.addEventListener('click', ()=>{
+      EVENTS.voice({team:'pedro', text:'cítím to takhle', weight:+0.5});
+      EVENTS.mood({anxiety:-0.05, calm:+0.05});
+    });
+
+    L('btnBottomRight')?.addEventListener('click', ()=>{
+      EVENTS.voice({team:'ai', text:'analýza: vpravo', weight:+0.7});
+      EVENTS.vision({kind:'path', truth:Math.random()<0.7?1:0, ttl:4000});
+    });
+  };
+  start();
+</script>
 </body>
 </html>
