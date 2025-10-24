@@ -2,35 +2,24 @@
 <html lang="cs">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Batolesvět • Viri</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Batolesvět • Viri (živé jádro)</title>
   <style>
-    html,body{margin:0;height:100%;background:#000;color:#cfe;
-      font:16px/1.5 system-ui,-apple-system,sans-serif;overflow:hidden;
-      user-select:none;-webkit-user-select:none}
+    html,body{margin:0;height:100%;background:#000;color:#cfe;font:16px/1.5 system-ui,-apple-system,sans-serif;overflow:hidden}
     canvas{width:100%;height:100%;display:block}
-
-    .btn{position:fixed;padding:8px 16px;border-radius:.7rem;border:1px solid #333;
-      background:rgba(30,30,36,.85);color:#ccb;font-weight:600;
-      backdrop-filter:blur(8px) saturate(120%);transition:.25s;z-index:20}
-    .btn:hover{background:rgba(48,48,58,.9)}
-    #btnTopLeft{top:18px;left:18px}
-    #btnTopRight{top:18px;right:18px}
-    #btnBottomLeft{bottom:18px;left:18px}
-    #btnBottomRight{bottom:18px;right:18px}
-
-    #worldLabel{position:fixed;left:0;right:0;bottom:64px;text-align:center;
-      color:#9ff;opacity:.9;z-index:15}
-
-    #hudLog{position:fixed;left:50%;transform:translateX(-50%);
-      bottom:92px;max-width:92vw;background:rgba(20,22,26,.82);
-      color:#cfe;border:1px solid #2d3a40;border-radius:10px;
-      padding:10px 14px;font:13px/1.4 system-ui,-apple-system,sans-serif;
-      box-shadow:0 8px 30px rgba(0,0,0,.45);backdrop-filter:blur(8px);z-index:30}
+    .btn{position:fixed;padding:8px 14px;border-radius:.7rem;border:1px solid #334;background:rgba(28,30,36,.85);color:#cbe;font-weight:600;backdrop-filter:blur(8px) saturate(120%);transition:.25s;z-index:20}
+    .btn:hover{background:rgba(50,52,60,.92)}
+    #btnTopLeft{top:16px;left:16px} #btnTopRight{top:16px;right:16px}
+    #btnBottomLeft{bottom:16px;left:16px} #btnBottomRight{bottom:16px;right:16px}
+    #worldLabel{position:fixed;left:0;right:0;bottom:64px;text-align:center;color:#9ff;opacity:.9;z-index:15}
+    #hudLog{position:fixed;left:50%;transform:translateX(-50%);bottom:92px;max-width:92vw;background:rgba(20,22,26,.82);color:#cfe;
+      border:1px solid #2d3a40;border-radius:10px;padding:10px 14px;font:13px/1.4 system-ui,-apple-system,sans-serif;box-shadow:0 8px 30px rgba(0,0,0,.45);backdrop-filter:blur(8px);z-index:30}
+    #advice{position:fixed;left:50%;transform:translateX(-50%);bottom:28px;padding:8px 12px;border-radius:.7rem;border:1px solid #355;background:rgba(12,18,24,.9);color:#cff;font-weight:600;opacity:0;transition:.3s;pointer-events:none;z-index:40}
+    #err{position:fixed;left:10px;bottom:10px;max-width:88vw;max-height:40vh;overflow:auto;background:rgba(10,10,10,.9);color:#f88;
+      border:1px solid #500;border-radius:8px;padding:8px 10px;font:12px/1.35 ui-monospace,Menlo,Consolas;z-index:9999;display:none;white-space:pre-wrap}
   </style>
 </head>
 <body>
-
   <!-- rohové odznaky -->
   <div id="btnTopLeft" class="btn">Batolesvět</div>
   <div id="btnTopRight" class="btn">Glyph</div>
@@ -39,13 +28,24 @@
 
   <div id="worldLabel">Svět: Michal Klimek</div>
 
-  <!-- plátno Viriho (centrální vizualizace i minimapa) -->
+  <!-- plátno pro Viriho -->
   <canvas id="canvasVafi"></canvas>
 
-  <!-- cache-busting -->
-  <script>window.V=(new Date()).toISOString().slice(0,19).replace(/[-:T]/g,'');</script>
+  <!-- HUD + Rady + chybový log -->
+  <div id="hudLog">🧭 fáze: …<br>🧪 mix → B:0% • G:0% • AI:0% • P:0%<br>• …</div>
+  <div id="advice">…</div>
+  <pre id="err"></pre>
 
-  <!-- moduly -->
+  <script>
+    // cache-busting verze
+    window.V = (new URL(location)).searchParams.get('v') || (Date.now()+'');
+    const $ = s => document.querySelector(s);
+    const logErr = (msg)=>{ const el=$('#err'); el.style.display='block'; el.textContent += (msg+'\n'); };
+    window.addEventListener('error', e=>logErr(`❌ ${e.message} @ ${e.filename?.split('/').pop?.()}:${e.lineno||''}`));
+    window.addEventListener('unhandledrejection', e=>logErr('❌ Promise: '+(e.reason?.message||e.reason||'unknown')));
+  </script>
+
+  <!-- moduly (načítají se z kořene repa) -->
   <script type="module" src="./events.core.js?v="+window.V></script>
   <script type="module" src="./viri.experience.js?v="+window.V></script>
   <script type="module" src="./viri.form.js?v="+window.V></script>
@@ -64,48 +64,40 @@
     const cv   = document.getElementById('canvasVafi');
     const viri = startViriForm(cv);
     const xp   = new ViriXP();
-
-    // propojení EVENTS → XP
     initViriLearning(xp);
 
-    // UI kliky (rohy) → EVENTS
-    const L = id => document.getElementById(id);
-    L('btnTopLeft').addEventListener('click', ()=>{
-      window.EVENTS.ground();
-      window.EVENTS.voice({team:'batolesvet', text:'puls paměti', weight:+0.8});
-    });
-    L('btnTopRight').addEventListener('click', ()=>{
-      window.EVENTS.voice({team:'glyph', text:'→ ☼', weight:+0.6});
-      window.EVENTS.vision({kind:'symbol', truth:1, ttl:3000});
-    });
-    L('btnBottomLeft').addEventListener('click', ()=>{
-      window.EVENTS.voice({team:'pedrovci', text:'cítím změnu', weight:+0.6});
-      window.EVENTS.mood({calm:+0.05});
-    });
-    L('btnBottomRight').addEventListener('click', ()=>{
-      window.EVENTS.voice({team:'ai', text:'analýza: východ', weight:+0.7});
-      window.EVENTS.vision({kind:'path', truth:1, ttl:3000});
-    });
+    // rady bublina
+    const advice = document.getElementById('advice');
+    const showAdvice = (t)=>{
+      advice.textContent = t;
+      advice.style.opacity = 1;
+      clearTimeout(showAdvice._t);
+      showAdvice._t = setTimeout(()=>advice.style.opacity=0, 2000);
+    };
 
+    // rohy → EVENTS
+    const L = id => document.getElementById(id);
+    L('btnTopLeft').onclick    = ()=>{ window.EVENTS.ground(); window.EVENTS.voice({team:'batolesvet',text:'puls paměti',weight:+0.8}); showAdvice('🌱 Klid je síla.'); };
+    L('btnTopRight').onclick   = ()=>{ window.EVENTS.voice({team:'glyph',text:'→ ☼',weight:+0.6}); window.EVENTS.vision({kind:'symbol',truth:1}); showAdvice('✨ Slova & symboly.'); };
+    L('btnBottomLeft').onclick = ()=>{ window.EVENTS.voice({team:'pedrovci',text:'cítím změnu',weight:+0.6}); window.EVENTS.mood({calm:+0.05}); showAdvice('❤️ Důvěřuj pocitu.'); };
+    L('btnBottomRight').onclick= ()=>{ window.EVENTS.voice({team:'ai',text:'analýza: východ',weight:+0.7}); window.EVENTS.vision({kind:'path',truth:1}); showAdvice('🧩 Logika vpřed.'); };
+
+    // smyčka
     let lastLabel='';
     function loop(){
       xp.tick();
-      const s = xp.getState();        // {mix,label,mood}
-      viri.setMix(s.mix);             // promítni do vzhledu
-
+      const s = xp.getState();         // {mix,label,mood}
+      viri.setMix(s.mix);
       if(s.label!==lastLabel){
         lastLabel=s.label;
-        buildInventory(s).then(inv=>{
-          initMap({canvas:cv, inventory:inv});
-        });
+        buildInventory(s).then(inv=>initMap({canvas:cv, inventory:inv}));
       }
       requestAnimationFrame(loop);
     }
     loop();
 
-    // Jemná simulace, ať žije i bez kliků (můžeš smazat)
-    let t=0;
-    setInterval(()=>{
+    // jemná simulace života (můžeš vypnout)
+    let t=0; setInterval(()=>{
       xp.add({team:'batolesvet', value:Math.abs(Math.sin(t*.33))*2});
       xp.add({team:'glyph',      value:Math.abs(Math.sin(t*.51))*2});
       xp.add({team:'ai',         value:Math.abs(Math.sin(t*.77))*2});
