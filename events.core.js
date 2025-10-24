@@ -1,24 +1,34 @@
-// events.core.js — centrální sběrnice událostí
-export const Bus = new EventTarget();
-
+// events.core.js – mini event-bus + napojení na ViriXP
 export const EVENTS = {
-  voice(payload) {  // {team:'glyph|ai|batole|pedro', text, weight:-1..+1}
-    Bus.dispatchEvent(new CustomEvent('voice', { detail: payload }));
-  },
-  vision(payload) { // {kind:'path|symbol|npc', truth:0..1, ttl:ms}
-    Bus.dispatchEvent(new CustomEvent('vision', { detail: payload }));
-  },
-  mood(payload) {   // {anxiety, calm, focus}
-    Bus.dispatchEvent(new CustomEvent('mood', { detail: payload }));
-  },
-  ground() {        // stabilizace
-    Bus.dispatchEvent(new CustomEvent('ground'));
-  },
-  feedback(payload) { // {trueVision:boolean}
-    Bus.dispatchEvent(new CustomEvent('feedback', { detail: payload }));
-  }
+  subs: [],
+  emit(type, payload){ this.subs.forEach(fn=>fn(type,payload)); },
+  on(fn){ this.subs.push(fn); },
+
+  // sémantické pomocníky
+  voice({team='glyph', text='', weight=0.5}){ this.emit('voice',{team,text,weight}); },
+  mood ({calm=0, anxiety=0, team='pedrovci'}){ this.emit('mood',{calm,anxiety,team}); },
+  ground(){ this.emit('ground',{}); },
+  vision({kind='symbol', truth=1, ttl=2000}){ this.emit('vision',{kind,truth,ttl}); },
 };
 
-// přístup i z konzole
-window.EVENTS = EVENTS;
-window.Bus = Bus;
+// připojí EVENTS k XP enginu
+export function initViriLearning(xp){
+  EVENTS.on((type,p)=>{
+    if(type==='voice'){
+      xp.add({team:p.team, value: Math.max(0.1, p.weight||0.1)});
+    }
+    if(type==='mood'){
+      xp.mood.calm     = clamp(xp.mood.calm     + p.calm    , 0, 1);
+      xp.mood.anxiety  = clamp(xp.mood.anxiety  + p.anxiety , 0, 1);
+      xp.add({team:p.team, value: Math.abs(p.calm - p.anxiety)*0.8});
+    }
+    if(type==='ground'){
+      // „uzemnění“ lehce přesune váhu k batolesvět
+      xp.add({team:'batolesvet', value:0.8});
+    }
+    if(type==='vision'){
+      xp.add({team:(p.kind==='path'?'ai':'glyph'), value:0.6*(p.truth?1:0.2)});
+    }
+  });
+}
+function clamp(x,a,b){ return Math.max(a, Math.min(b,x)); }
