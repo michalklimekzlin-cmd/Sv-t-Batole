@@ -87,4 +87,30 @@
   <script type="module" src="./app.js?v="+window.V></script>
   <script type="module" src="./notify.local.js?v="+window.V></script>
 </body>
+<!-- 🧠 TEST VIRI BUTTON -->
+<script>
+  window.addEventListener('DOMContentLoaded', () => {
+    const btn = document.createElement('button');
+    btn.textContent = 'Ping Viri';
+    btn.style.position = 'fixed';
+    btn.style.bottom = '20px';
+    btn.style.left = '50%';
+    btn.style.transform = 'translateX(-50%)';
+    btn.style.padding = '6px 16px';
+    btn.style.borderRadius = '.5rem';
+    btn.style.background = 'rgba(80,150,255,0.2)';
+    btn.style.color = '#bff';
+    btn.style.border = '1px solid #357';
+    btn.style.font = '600 14px system-ui';
+    btn.onclick = () => {
+      if (window.Viri?.ping) {
+        window.Viri.ping('žiju?');
+        alert('✅ Ping poslán Viri-mu!');
+      } else {
+        alert('⚠️ Viri zatím nereaguje.');
+      }
+    };
+    document.body.appendChild(btn);
+  });
+</script>
 </html>
