@@ -37,29 +37,20 @@
   <pre id="err"></pre>
 
   <script>
-    // cache-busting verze
-    window.V = (new URL(location)).searchParams.get('v') || (Date.now()+'');
     const $ = s => document.querySelector(s);
     const logErr = (msg)=>{ const el=$('#err'); el.style.display='block'; el.textContent += (msg+'\n'); };
     window.addEventListener('error', e=>logErr(`❌ ${e.message} @ ${e.filename?.split('/').pop?.()}:${e.lineno||''}`));
     window.addEventListener('unhandledrejection', e=>logErr('❌ Promise: '+(e.reason?.message||e.reason||'unknown')));
   </script>
 
-  <!-- moduly (načítají se z kořene repa) -->
-  <script type="module" src="./events.core.js?v="+window.V></script>
-  <script type="module" src="./viri.experience.js?v="+window.V></script>
-  <script type="module" src="./viri.form.js?v="+window.V></script>
-  <script type="module" src="./viri.inventory.js?v="+window.V></script>
-  <script type="module" src="./map.logic.js?v="+window.V></script>
-  <script type="module" src="./viri.learning.js?v="+window.V></script>
-
-  <!-- hlavní start -->
+  <!-- pevné importy (Safari-safe) -->
   <script type="module">
-    import { ViriXP } from './viri.experience.js?v='+window.V;
-    import { startViriForm } from './viri.form.js?v='+window.V;
-    import { buildInventory } from './viri.inventory.js?v='+window.V;
-    import { initMap } from './map.logic.js?v='+window.V;
-    import { initViriLearning } from './viri.learning.js?v='+window.V;
+    import { ViriXP } from './viri.experience.js';
+    import { startViriForm } from './viri.form.js';
+    import { buildInventory } from './viri.inventory.js';
+    import { initMap } from './map.logic.js';
+    import { initViriLearning } from './viri.learning.js';
+    import './events.core.js';
 
     const cv   = document.getElementById('canvasVafi');
     const viri = startViriForm(cv);
@@ -86,7 +77,7 @@
     let lastLabel='';
     function loop(){
       xp.tick();
-      const s = xp.getState();         // {mix,label,mood}
+      const s = xp.getState();
       viri.setMix(s.mix);
       if(s.label!==lastLabel){
         lastLabel=s.label;
@@ -96,7 +87,7 @@
     }
     loop();
 
-    // jemná simulace života (můžeš vypnout)
+    // simulace života
     let t=0; setInterval(()=>{
       xp.add({team:'batolesvet', value:Math.abs(Math.sin(t*.33))*2});
       xp.add({team:'glyph',      value:Math.abs(Math.sin(t*.51))*2});
