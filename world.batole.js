@@ -1,3 +1,8 @@
+if (window.__WORLD_ACTIVE__) {
+  console.warn('World už běží – druhé spuštění odmítnuto.');
+} else {
+  window.__WORLD_ACTIVE__ = true;
+}
 // world.batole.js – spustí BatoleSvět
 import { ViriDirector } from './viri.director.js';
 
