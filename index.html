@@ -29,7 +29,17 @@
   <div id="worldLabel">Svět: Michal Klimek</div>
 
   <!-- plátno pro Viriho -->
-  <canvas id="canvasVafi"></canvas>
+<!-- DOORS: za Virim (pozadí) -->
+<canvas id="canvasDoor"
+        style="position:fixed;inset:0;z-index:0;pointer-events:none;"></canvas>
+
+<!-- VIRI: hlavní orb -->
+<canvas id="canvasVafi"
+        style="position:fixed;inset:0;z-index:1;"></canvas>
+
+<!-- AURA: před Virim (písmena/kouř) -->
+<canvas id="canvasAura"
+        style="position:fixed;inset:0;z-index:2;pointer-events:none;"></canvas>
 
   <!-- HUD + Rady + chybový log -->
   <div id="hudLog">🧭 fáze: …<br>🧪 mix → B:0% • G:0% • AI:0% • P:0%<br>• …</div>
