@@ -54,13 +54,19 @@
   </script>
 
   <!-- pevné importy (Safari-safe) -->
-  <script type="module">
-    import { ViriXP } from './viri.experience.js';
-    import { startViriForm } from './viri.form.js';
-    import { buildInventory } from './viri.inventory.js';
-    import { initMap } from './map.logic.js';
-    import { initViriLearning } from './viri.learning.js';
-    import './events.core.js';
+import { ViriXP } from './viri.experience.js';
+import { startViriForm } from './viri.form.js';
+import { buildInventory } from './viri.inventory.js';
+import { initMap } from './map.logic.js';
+import { initViriLearning } from './viri.learning.js';
+import './events.core.js';
+
+import { startViriDoor } from './viri.door.js';
+import { startViriAura } from './viri.aura.js';
+
+// spustit po načtení ostatních modulů
+startViriDoor(document.getElementById('canvasDoor'));
+startViriAura(document.getElementById('canvasAura'));
 
     const cv   = document.getElementById('canvasVafi');
     const viri = startViriForm(cv);
