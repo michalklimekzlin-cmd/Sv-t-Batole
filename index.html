@@ -28,18 +28,12 @@
 
   <div id="worldLabel">Svět: Michal Klimek</div>
 
-  <!-- plátno pro Viriho -->
-<!-- DOORS: za Virim (pozadí) -->
-<canvas id="canvasDoor"
-        style="position:fixed;inset:0;z-index:0;pointer-events:none;"></canvas>
-
-<!-- VIRI: hlavní orb -->
-<canvas id="canvasVafi"
-        style="position:fixed;inset:0;z-index:1;"></canvas>
-
-<!-- AURA: před Virim (písmena/kouř) -->
-<canvas id="canvasAura"
-        style="position:fixed;inset:0;z-index:2;pointer-events:none;"></canvas>
+  <!-- DOORS: za Virim (pozadí) -->
+  <canvas id="canvasDoor" style="position:fixed;inset:0;z-index:0;pointer-events:none;"></canvas>
+  <!-- VIRI: hlavní orb -->
+  <canvas id="canvasVafi" style="position:fixed;inset:0;z-index:1;"></canvas>
+  <!-- AURA: před Virim (písmena/kouř) -->
+  <canvas id="canvasAura" style="position:fixed;inset:0;z-index:2;pointer-events:none;"></canvas>
 
   <!-- HUD + Rady + chybový log -->
   <div id="hudLog">🧭 fáze: …<br>🧪 mix → B:0% • G:0% • AI:0% • P:0%<br>• …</div>
@@ -53,20 +47,29 @@
     window.addEventListener('unhandledrejection', e=>logErr('❌ Promise: '+(e.reason?.message||e.reason||'unknown')));
   </script>
 
-  <!-- pevné importy (Safari-safe) -->
-import { ViriXP } from './viri.experience.js';
-import { startViriForm } from './viri.form.js';
-import { buildInventory } from './viri.inventory.js';
-import { initMap } from './map.logic.js';
-import { initViriLearning } from './viri.learning.js';
-import './events.core.js';
+  <!-- ✅ ES module kód MUSÍ být uvnitř <script type="module"> -->
+  <script type="module">
+    import { ViriXP }         from './viri.experience.js';
+    import { startViriForm }  from './viri.form.js';
+    import { buildInventory } from './viri.inventory.js';
+    import { initMap }        from './map.logic.js';
+    import { initViriLearning } from './viri.learning.js';
+    import './events.core.js';
 
-import { startViriDoor } from './viri.door.js';
-import { startViriAura } from './viri.aura.js';
+    import { startViriDoor }  from './viri.door.js';
+    import { startViriAura }  from './viri.aura.js';
 
-// spustit po načtení ostatních modulů
-startViriDoor(document.getElementById('canvasDoor'));
-startViriAura(document.getElementById('canvasAura'));
+    // fallback, kdyby EVENTS ještě nebyly na window
+    window.EVENTS ||= {
+      voice:(m)=>console.log('🎙️',m),
+      mood:(m)=>console.log('💫',m),
+      vision:(v)=>console.log('👁️',v),
+      ground:()=>console.log('🌍 ground')
+    };
+
+    // spustit po načtení modulů
+    const door = startViriDoor(document.getElementById('canvasDoor'));
+    const aura = startViriAura(document.getElementById('canvasAura'));
 
     const cv   = document.getElementById('canvasVafi');
     const viri = startViriForm(cv);
@@ -84,26 +87,29 @@ startViriAura(document.getElementById('canvasAura'));
 
     // rohy → EVENTS
     const L = id => document.getElementById(id);
-    L('btnTopLeft').onclick    = ()=>{ window.EVENTS.ground(); window.EVENTS.voice({team:'batolesvet',text:'puls paměti',weight:+0.8}); showAdvice('🌱 Klid je síla.'); };
-    L('btnTopRight').onclick   = ()=>{ window.EVENTS.voice({team:'glyph',text:'→ ☼',weight:+0.6}); window.EVENTS.vision({kind:'symbol',truth:1}); showAdvice('✨ Slova & symboly.'); };
-    L('btnBottomLeft').onclick = ()=>{ window.EVENTS.voice({team:'pedrovci',text:'cítím změnu',weight:+0.6}); window.EVENTS.mood({calm:+0.05}); showAdvice('❤️ Důvěřuj pocitu.'); };
-    L('btnBottomRight').onclick= ()=>{ window.EVENTS.voice({team:'ai',text:'analýza: východ',weight:+0.7}); window.EVENTS.vision({kind:'path',truth:1}); showAdvice('🧩 Logika vpřed.'); };
+    L('btnTopLeft').onclick     = () => { window.EVENTS.ground(); window.EVENTS.voice({team:'batolesvet',text:'puls paměti',weight:+0.8}); showAdvice('🌱 Klid je síla.'); };
+    L('btnTopRight').onclick    = () => { window.EVENTS.voice({team:'glyph',text:'→ ☼',weight:+0.6}); window.EVENTS.vision({kind:'symbol',truth:1}); showAdvice('✨ Slova & symboly.'); };
+    L('btnBottomLeft').onclick  = () => { window.EVENTS.voice({team:'pedrovci',text:'cítím změnu',weight:+0.6}); window.EVENTS.mood({calm:+0.05}); showAdvice('❤️ Důvěřuj pocitu.'); };
+    L('btnBottomRight').onclick = () => { window.EVENTS.voice({team:'ai',text:'analýza: východ',weight:+0.7}); window.EVENTS.vision({kind:'path',truth:1}); showAdvice('🧩 Logika vpřed.'); };
 
-    // smyčka
+    // hlavní smyčka
     let lastLabel='';
     function loop(){
       xp.tick();
       const s = xp.getState();
       viri.setMix(s.mix);
-      if(s.label!==lastLabel){
-        lastLabel=s.label;
-        buildInventory(s).then(inv=>initMap({canvas:cv, inventory:inv}));
+      aura?.setMix?.(s.mix);           // jemně obarví „kouř“ podle mixu
+      door?.tick?.(s);                 // může reagovat na fázi/label
+
+      if (s.label !== lastLabel) {
+        lastLabel = s.label;
+        buildInventory(s).then(inv => initMap({ canvas: cv, inventory: inv }));
       }
       requestAnimationFrame(loop);
     }
     loop();
 
-    // simulace života
+    // simulace života (do té doby, než bude UI/feeds)
     let t=0; setInterval(()=>{
       xp.add({team:'batolesvet', value:Math.abs(Math.sin(t*.33))*2});
       xp.add({team:'glyph',      value:Math.abs(Math.sin(t*.51))*2});
